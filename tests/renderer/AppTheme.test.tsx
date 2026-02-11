@@ -92,7 +92,7 @@ describe('App Theme Logic', () => {
     expect(document.documentElement.classList.contains('dark')).toBe(true);
 
     // Expect button to show Sun (toggle to Light)
-    expect(screen.getByTitle('Toggle Theme')).toHaveTextContent('🌞');
+    expect(screen.getByTitle('切换主题')).toHaveTextContent('🌞');
   });
 
   it('renders Light Mode when system is Light and themeMode is system', async () => {
@@ -104,7 +104,7 @@ describe('App Theme Logic', () => {
     expect(document.documentElement.classList.contains('dark')).toBe(false);
 
     // Expect button to show Moon (toggle to Dark)
-    expect(screen.getByTitle('Toggle Theme')).toHaveTextContent('🌙');
+    expect(screen.getByTitle('切换主题')).toHaveTextContent('🌙');
   });
 
   it('toggles from System(Dark) to Light correctly', async () => {
@@ -112,7 +112,7 @@ describe('App Theme Logic', () => {
     render(<App />);
 
     // Initially Dark, Button is Sun
-    const button = screen.getByTitle('Toggle Theme');
+    const button = screen.getByTitle('切换主题');
     expect(button).toHaveTextContent('🌞');
 
     // Click button
@@ -127,7 +127,7 @@ describe('App Theme Logic', () => {
     render(<App />);
 
     // Initially Light, Button is Moon
-    const button = screen.getByTitle('Toggle Theme');
+    const button = screen.getByTitle('切换主题');
     expect(button).toHaveTextContent('🌙');
 
     // Click button

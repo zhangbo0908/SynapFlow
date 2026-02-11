@@ -37,6 +37,7 @@ interface MindmapState {
   redo: () => void;
   updateLayout: (layout: LayoutType) => void;
   updateTheme: (themeName: string) => void;
+  moveNode: (id: string, targetParentId: string) => void;
 }
 
 const createNode = (parentId: string, style: Partial<NodeStyle> = {}): MindmapNode => {
@@ -457,6 +458,79 @@ export const useMindmapStore = create<MindmapState>((set) => ({
     };
 
     applyStyle(sheet.rootId, true);
+    applyLayout(sheet.rootId, sheet.nodes, sheet.layout || 'logic');
+  })),
+
+  moveNode: (id, targetParentId) => set(produce((state: MindmapState) => {
+    const sheet = getActiveSheet(state.data);
+    if (!sheet) return;
+    
+    // Validation
+    if (id === targetParentId) return; // Can't move to self
+    const node = sheet.nodes[id];
+    const targetParent = sheet.nodes[targetParentId];
+    if (!node || !targetParent) return;
+    if (node.parentId === targetParentId) return; // Already there
+    if (node.isRoot) return; // Can't move root
+
+    // Cycle detection: Check if targetParentId is a descendant of id
+    let currentId = targetParentId;
+    let isCycle = false;
+    while (currentId && sheet.nodes[currentId]) {
+        if (currentId === id) {
+            isCycle = true;
+            break;
+        }
+        // Move up
+        if (sheet.nodes[currentId].isRoot) break;
+        currentId = sheet.nodes[currentId].parentId || '';
+    }
+    if (isCycle) return;
+
+    // Proceed with move
+    state.history.past.push(JSON.parse(JSON.stringify(state.data)));
+    if (state.history.past.length > 20) state.history.past.shift();
+    state.history.future = [];
+
+    // 1. Remove from old parent
+    if (node.parentId) {
+        const oldParent = sheet.nodes[node.parentId];
+        if (oldParent) {
+            const idx = oldParent.children.indexOf(id);
+            if (idx !== -1) oldParent.children.splice(idx, 1);
+        }
+    }
+
+    // 2. Add to new parent
+    targetParent.children.push(id);
+    node.parentId = targetParentId;
+
+    // 3. Update Styles based on new level
+    const theme = THEME_PRESETS[sheet.theme] || THEME_PRESETS.business;
+    
+    const updateStylesRecursively = (nId: string, isChildOfRoot: boolean) => {
+        const n = sheet.nodes[nId];
+        if (!n) return;
+        
+        let newStyleBase = isChildOfRoot ? theme.primaryStyle : theme.secondaryStyle;
+        
+        // Update structural styles from theme, keep others if needed
+        n.style = { 
+          ...n.style,
+          fontSize: newStyleBase.fontSize,
+          // Remove paddingX/Y as they are not in NodeStyle
+        };
+        
+        const { width, height } = measureText(n.text, n.style);
+        n.width = width;
+        n.height = height;
+
+        n.children.forEach(cId => updateStylesRecursively(cId, false));
+    }
+
+    updateStylesRecursively(id, !!targetParent.isRoot);
+
+    // 4. Layout
     applyLayout(sheet.rootId, sheet.nodes, sheet.layout || 'logic');
   })),
 }));

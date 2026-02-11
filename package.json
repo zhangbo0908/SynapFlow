@@ -1,6 +1,6 @@
 {
   "name": "synapflow",
-  "version": "0.1.0",
+  "version": "1.1.0",
   "description": "A native mind mapping tool powered by Electron and React",
   "main": "./out/main/index.js",
   "author": "SynapFlow Team",

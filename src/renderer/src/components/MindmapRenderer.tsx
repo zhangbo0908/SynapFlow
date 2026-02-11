@@ -24,6 +24,8 @@ interface MindmapRendererProps {
   culling?: boolean;
   viewport?: ViewportState;
   styleConfig?: RenderStyleConfig;
+  onNodeDragStart?: (e: React.MouseEvent, nodeId: string) => void;
+  dropTargetId?: string | null;
 }
 
 const MindmapRenderer: React.FC<MindmapRendererProps> = ({
@@ -32,7 +34,9 @@ const MindmapRenderer: React.FC<MindmapRendererProps> = ({
   layout = 'logic',
   culling = true,
   viewport,
-  styleConfig
+  styleConfig,
+  onNodeDragStart,
+  dropTargetId
 }) => {
   const isNodeVisible = (node: MindmapNode) => {
     // If culling is disabled, everything is visible
@@ -70,7 +74,14 @@ const MindmapRenderer: React.FC<MindmapRendererProps> = ({
 
     if (visible) {
       return [
-        <NodeComponent key={nodeId} nodeId={nodeId} node={node} styleConfig={styleConfig} />,
+        <NodeComponent 
+          key={nodeId} 
+          nodeId={nodeId} 
+          node={node} 
+          styleConfig={styleConfig} 
+          onNodeDragStart={onNodeDragStart}
+          isDropTarget={dropTargetId === nodeId}
+        />,
         ...childElements
       ];
     } else {

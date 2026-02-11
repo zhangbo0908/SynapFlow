@@ -9,9 +9,17 @@ interface NodeComponentProps {
   nodeId: string;
   node?: MindmapNode;
   styleConfig?: RenderStyleConfig;
+  onNodeDragStart?: (e: React.MouseEvent, nodeId: string) => void;
+  isDropTarget?: boolean;
 }
 
-const NodeComponent: React.FC<NodeComponentProps> = ({ nodeId, node: propNode, styleConfig }) => {
+const NodeComponent: React.FC<NodeComponentProps> = ({ 
+  nodeId, 
+  node: propNode, 
+  styleConfig,
+  onNodeDragStart,
+  isDropTarget 
+}) => {
   const storeNode = useMindmapStore(state => {
     // If we have a propNode, we might skip subscription, but hooks rules say we shouldn't conditionalize hooks.
     // However, we can just return undefined if we don't care, or just always subscribe.
@@ -65,6 +73,15 @@ const NodeComponent: React.FC<NodeComponentProps> = ({ nodeId, node: propNode, s
     }
   };
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Only left click triggers drag
+    if (e.button !== 0) return;
+    
+    if (onNodeDragStart && !isEditing) {
+       onNodeDragStart(e, nodeId);
+    }
+  };
+
   // Helper to resolve color
   const resolveColor = (color: string | undefined, cssVar: string, fallback: string) => {
     if (color) return color;
@@ -79,8 +96,8 @@ const NodeComponent: React.FC<NodeComponentProps> = ({ nodeId, node: propNode, s
   const shape = node.style?.shape || 'rounded';
   const commonProps = {
     fill: resolveColor(node.style?.backgroundColor, '--color-bg-node', '#ffffff'),
-    stroke: resolveColor(node.style?.borderColor, '--color-border-node', (node.isRoot ? '#FF5D5D' : '#3498DB')),
-    strokeWidth: node.style?.borderWidth !== undefined ? node.style.borderWidth : (isSelected ? 3 : 2),
+    stroke: isDropTarget ? '#3B82F6' : resolveColor(node.style?.borderColor, '--color-border-node', (node.isRoot ? '#FF5D5D' : '#3498DB')),
+    strokeWidth: isDropTarget ? 3 : (node.style?.borderWidth !== undefined ? node.style.borderWidth : (isSelected ? 3 : 2)),
     strokeDasharray: node.style?.borderStyle === 'dashed' ? '5,5' : (node.style?.borderStyle === 'dotted' ? '2,2' : undefined),
     className: clsx("shadow-sm transition-all duration-200", isSelected && "filter drop-shadow-md"),
     style: node.style?.shadowColor ? { filter: `drop-shadow(0 0 ${node.style.shadowBlur || 5}px ${node.style.shadowColor})` } : undefined
@@ -191,6 +208,11 @@ const NodeComponent: React.FC<NodeComponentProps> = ({ nodeId, node: propNode, s
       transform={`translate(${node.x}, ${node.y})`}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
+      onMouseDown={handleMouseDown}
+      className={clsx(
+        !node.isRoot && "cursor-grab active:cursor-grabbing",
+        node.isRoot && "cursor-default"
+      )}
     >
       {renderShape()}
       
