@@ -45,7 +45,9 @@ SynapFlow 是一个 **人机协同开发** 的实战范式项目。我们采用�
 
 ### 📦 下载与安装
 
-您可以在 [GitHub Releases](https://github.com/zhangbo0908/SynapFlow/releases) 页面下载最新版本的 macOS 制品。
+您可以在 [GitHub Releases](https://github.com/zhangbo0908/SynapFlow/releases) 页面下载最新版本的 macOS 和 Windows 制品。
+
+> **注意**：Windows 版本目前仅完成了打包编译，尚未经过深度测试。建议感兴趣的爱好者可以自行下载或通过源码编译调试。
 
 ## 🛠 开发调试
 
