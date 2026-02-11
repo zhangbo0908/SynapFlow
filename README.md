@@ -24,6 +24,8 @@ SynapFlow 是一个专注于隐私、高性能的本地思维导图应用。它�
   - **撤销/重做**：基于 Immer 的不可变数据流，支持 20 步深度历史记录。
   - **自动保存**：实时防丢失机制，支持 Cmd+S 快速同步到本地文件。
 - **📤 多格式导出 (v0.9.0)**：支持一键导出为 **Markdown**、**PDF** 以及 **高保真图片** (PNG/JPEG)，方便分享与二次编辑。
+- **🖱️ 交互升级 (v1.1.0)**：
+  - **节点拖拽重组**：直观地拖动节点改变层级与父子关系，支持防环检测与吸附反馈。
 
 ## 🤖 智能协作开发
 
@@ -46,6 +48,9 @@ SynapFlow 是一个 **人机协同开发** 的实战范式项目。我们采用�
 ### 📦 下载与安装
 
 您可以在 [GitHub Releases](https://github.com/zhangbo0908/SynapFlow/releases) 页面下载最新版本的 macOS 和 Windows 制品。
+
+- **macOS (Apple Silicon)**: [SynapFlow-1.1.0-mac-arm64.zip](https://github.com/zhangbo0908/SynapFlow/releases/download/v1.1.0/SynapFlow-1.1.0-mac-arm64.zip)
+- **Windows (x64)**: [SynapFlow-1.1.0-win-x64.exe](https://github.com/zhangbo0908/SynapFlow/releases/download/v1.1.0/SynapFlow-1.1.0-win-x64.exe)
 
 > **注意**：Windows 版本目前仅完成了打包编译，尚未经过深度测试。建议感兴趣的爱好者可以自行下载或通过源码编译调试。
 
@@ -82,7 +87,7 @@ sudo xattr -rd com.apple.quarantine /Applications/SynapFlow.app
 
 ## 🗓 开发进度
 
-当前版本：v0.9.0 (Export System Release)
+当前版本：v1.1.0 (Drag & Drop Update)
 
 - [x] **基础架构**：Electron + React + TypeScript 环境搭建
 - [x] **核心编辑**：节点增删改、快捷键系统、Undo/Redo (20步)
@@ -91,7 +96,8 @@ sudo xattr -rd com.apple.quarantine /Applications/SynapFlow.app
 - [x] **视觉系统**：5 套内置主题、8 种节点形状、3 种连线样式
 - [x] **多页签管理**：多 Sheet 切换与独立状态存储
 - [x] **多格式导出**：Markdown、PDF 及高保真图片导出支持
-- [ ] **v1.0.0 冲刺**：
+- [x] **交互升级**：节点拖拽重组、防环检测与视觉反馈 (v1.1.0)
+- [ ] **v1.2.0 冲刺**：
   - [ ] **性能优化**：超大规模节点渲染优化（Canvas/虚拟列表）
   - [ ] **体验增强**：全局搜索、节点图标/标签支持、自动更新机制
 
