@@ -1,0 +1,70 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 背景渐变：深邃科技蓝 -->
+    <linearGradient id="bg_gradient" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0f172a"/> <!-- slate-900 -->
+      <stop offset="100%" stop-color="#1e1b4b"/> <!-- indigo-950 -->
+    </linearGradient>
+
+    <!-- 连接线渐变：能量流动感 -->
+    <linearGradient id="link_gradient" x1="100" y1="400" x2="412" y2="112" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#06b6d4"/> <!-- cyan-500 -->
+      <stop offset="50%" stop-color="#6366f1"/> <!-- indigo-500 -->
+      <stop offset="100%" stop-color="#d946ef"/> <!-- fuchsia-500 -->
+    </linearGradient>
+
+    <!-- 节点发光 -->
+    <filter id="node_glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    
+    <!-- 强发光 -->
+    <filter id="strong_glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- 背景容器 -->
+  <rect width="512" height="512" rx="128" fill="url(#bg_gradient)"/>
+
+  <!-- 装饰网格 (低透明度) -->
+  <path d="M64 256 H448 M256 64 V448" stroke="#ffffff" stroke-opacity="0.05" stroke-width="2"/>
+  <circle cx="256" cy="256" r="150" stroke="#ffffff" stroke-opacity="0.05" stroke-width="2"/>
+
+  <!-- 主连接线 (Synapse) -->
+  <!-- S 形曲线连接左下和右上 -->
+  <path d="M120 380 C 120 200, 392 312, 392 132" 
+        stroke="url(#link_gradient)" 
+        stroke-width="32" 
+        stroke-linecap="round" 
+        fill="none"
+        filter="url(#strong_glow)"/>
+        
+  <!-- 核心连接线 (高亮部分，增加立体感) -->
+  <path d="M120 380 C 120 200, 392 312, 392 132" 
+        stroke="#ffffff" 
+        stroke-opacity="0.4"
+        stroke-width="8" 
+        stroke-linecap="round" 
+        fill="none"/>
+
+  <!-- 节点 A (起点 - 逻辑/输入) -->
+  <g filter="url(#node_glow)">
+    <circle cx="120" cy="380" r="40" fill="#06b6d4"/> <!-- Cyan -->
+    <circle cx="120" cy="380" r="20" fill="#ffffff"/>
+  </g>
+
+  <!-- 节点 B (终点 - 创意/输出) -->
+  <g filter="url(#node_glow)">
+    <circle cx="392" cy="132" r="40" fill="#d946ef"/> <!-- Fuchsia -->
+    <circle cx="392" cy="132" r="20" fill="#ffffff"/>
+  </g>
+  
+  <!-- 浮动粒子 (表示思维火花) -->
+  <circle cx="200" cy="280" r="8" fill="#6366f1" fill-opacity="0.8"/>
+  <circle cx="312" cy="232" r="6" fill="#818cf8" fill-opacity="0.6"/>
+  <circle cx="256" cy="256" r="10" fill="#ffffff" fill-opacity="0.9"/>
+
+</svg>
