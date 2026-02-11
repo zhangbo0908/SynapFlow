@@ -51,9 +51,13 @@ describe('Shortcuts', () => {
 
   it('adds sibling node on Enter', () => {
     // Setup: Root -> Child
-    useMindmapStore.getState().addChildNode('root');
+    act(() => {
+      useMindmapStore.getState().addChildNode('root');
+    });
     const childId = getActiveSheet().nodes['root'].children[0];
-    useMindmapStore.getState().selectNode(childId);
+    act(() => {
+      useMindmapStore.getState().selectNode(childId);
+    });
     
     render(<CanvasWorkspace />);
     
@@ -67,9 +71,13 @@ describe('Shortcuts', () => {
 
   it('deletes node on Delete', () => {
     // Setup: Root -> Child
-    useMindmapStore.getState().addChildNode('root');
+    act(() => {
+      useMindmapStore.getState().addChildNode('root');
+    });
     const childId = getActiveSheet().nodes['root'].children[0];
-    useMindmapStore.getState().selectNode(childId);
+    act(() => {
+      useMindmapStore.getState().selectNode(childId);
+    });
     
     render(<CanvasWorkspace />);
     

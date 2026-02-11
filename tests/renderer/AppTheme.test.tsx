@@ -38,6 +38,10 @@ window.api = {
     getHasSeenOnboarding: vi.fn().mockResolvedValue(true), // Mock as true to skip onboarding
     setHasSeenOnboarding: vi.fn().mockResolvedValue(undefined)
   },
+  user: {
+    getPreferences: vi.fn().mockResolvedValue({}),
+    setPreferences: vi.fn(),
+  },
 } as any;
 
 describe('App Theme Logic', () => {

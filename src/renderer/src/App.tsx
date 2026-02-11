@@ -217,7 +217,7 @@ function App(): JSX.Element {
               <button 
                 onClick={() => setThemeMode(isDark ? 'light' : 'dark')}
                 className="px-3 py-1 text-xs bg-panel hover:bg-panel-hover border border-ui-border rounded text-ui-secondary transition-colors"
-                title="Toggle Theme"
+                title="切换主题"
               >
                 {isDark ? '🌞' : '🌙'}
               </button>
@@ -235,13 +235,13 @@ function App(): JSX.Element {
                 onClick={handleOpenFile}
                 className="px-3 py-1 text-xs bg-panel hover:bg-panel-hover border border-ui-border rounded text-ui-primary transition-colors"
               >
-                Open
+                打开
               </button>
               <button 
                 onClick={handleImportXMind}
                 className="px-3 py-1 text-xs bg-panel hover:bg-panel-hover border border-ui-border text-ui-primary rounded transition-colors"
               >
-                Import XMind
+                导入 XMind
               </button>
               <ExportDropdown 
                 onExportMarkdown={handleExportMarkdown}
@@ -252,7 +252,7 @@ function App(): JSX.Element {
                 onClick={handleSaveFile}
                 className="px-3 py-1 text-xs bg-brand hover:bg-blue-600 text-white rounded transition-colors"
               >
-                Save
+                保存
               </button>
             </div>
           </div>

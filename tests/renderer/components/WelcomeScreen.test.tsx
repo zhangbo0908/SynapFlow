@@ -38,19 +38,25 @@ describe('WelcomeScreen', () => {
 
   it('renders correctly', async () => {
     render(<WelcomeScreen />);
-    // Basic render check via logo alt text or title
-    expect(screen.getByText('SynapFlow')).toBeInTheDocument();
+    // Wait for effect to settle to avoid act warnings
+    await waitFor(() => {
+      expect(screen.getByText('SynapFlow')).toBeInTheDocument();
+    });
   });
 
   it('displays logo and title', async () => {
     render(<WelcomeScreen />);
-    expect(screen.getByText('SynapFlow')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('SynapFlow')).toBeInTheDocument();
+    });
   });
 
   it('has action buttons', async () => {
     render(<WelcomeScreen />);
-    expect(screen.getByText('新建思维导图')).toBeInTheDocument();
-    expect(screen.getByText('打开文件')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('新建思维导图')).toBeInTheDocument();
+      expect(screen.getByText('打开文件')).toBeInTheDocument();
+    });
   });
 
   it('loads recent files on mount', async () => {
