@@ -1,5 +1,8 @@
 # SynapFlow
 
+[![GitHub release](https://img.shields.io/github/v/release/zhangbo0908/SynapFlow?include_prereleases)](https://github.com/zhangbo0908/SynapFlow/releases)
+[![Download macOS](https://img.shields.io/badge/download-macOS-blue?logo=apple)](https://github.com/zhangbo0908/SynapFlow/releases/latest)
+
 SynapFlow 是一个专注于隐私、高性能的本地思维导图应用。它采用现代 Web 技术构建，旨在提供流畅的思维梳理体验，完全兼容 XMind 文件格式。
 
 ## ✨ 核心特性
@@ -40,7 +43,11 @@ SynapFlow 是一个 **人机协同开发** 的实战范式项目。我们采用�
 - **Testing**: Vitest, React Testing Library
 - **Build**: Electron-Vite
 
-## 📦 安装与开发
+### 📦 下载与安装
+
+您可以在 [GitHub Releases](https://github.com/zhangbo0908/SynapFlow/releases) 页面下载最新版本的 macOS 制品。
+
+## 🛠 开发调试
 
 ### 前置要求
 - Node.js (v18+)
