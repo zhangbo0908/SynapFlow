@@ -132,4 +132,62 @@ describe('useMindmapStore Multi-Sheet', () => {
     // Logic ensures new IDs are generated, so no conflict usually
     expect(child1).toBeDefined();
   });
+
+  it('should reorder sheets', () => {
+    const store = useMindmapStore.getState();
+    store.addSheet(); // Add Sheet 2
+    store.addSheet(); // Add Sheet 3
+    // Order: Sheet 1, Sheet 2, Sheet 3
+    
+    const initialSheets = [...useMindmapStore.getState().data.sheets];
+    expect(initialSheets.length).toBe(3);
+    
+    // Move Sheet 3 (index 2) to start (index 0)
+    store.reorderSheets(2, 0);
+    
+    const updatedSheets = useMindmapStore.getState().data.sheets;
+    expect(updatedSheets[0].id).toBe(initialSheets[2].id);
+    expect(updatedSheets[1].id).toBe(initialSheets[0].id);
+    expect(updatedSheets[2].id).toBe(initialSheets[1].id);
+  });
+
+  it('should ignore invalid reorder indices', () => {
+    useMindmapStore.getState().addSheet(); // Add Sheet 2
+    const initialSheets = JSON.stringify(useMindmapStore.getState().data.sheets);
+    
+    useMindmapStore.getState().reorderSheets(-1, 0);
+    expect(JSON.stringify(useMindmapStore.getState().data.sheets)).toBe(initialSheets);
+    
+    useMindmapStore.getState().reorderSheets(0, 5);
+    expect(JSON.stringify(useMindmapStore.getState().data.sheets)).toBe(initialSheets);
+    
+    useMindmapStore.getState().reorderSheets(0, 0); // Same index
+    expect(JSON.stringify(useMindmapStore.getState().data.sheets)).toBe(initialSheets);
+  });
+
+  it('should support undo/redo for reorder', () => {
+    useMindmapStore.getState().addSheet(); // Sheet 2
+    
+    const state = useMindmapStore.getState();
+    const sheet1Id = state.data.sheets[0].id;
+    const sheet2Id = state.data.sheets[1].id;
+    
+    // Initial: [Sheet1, Sheet2]
+    
+    // Move Sheet 2 to 0
+    useMindmapStore.getState().reorderSheets(1, 0);
+    
+    // Now: [Sheet2, Sheet1]
+    expect(useMindmapStore.getState().data.sheets[0].id).toBe(sheet2Id);
+    
+    // Undo
+    useMindmapStore.getState().undo();
+    // Should be: [Sheet1, Sheet2]
+    expect(useMindmapStore.getState().data.sheets[0].id).toBe(sheet1Id);
+    
+    // Redo
+    useMindmapStore.getState().redo();
+    // Should be: [Sheet2, Sheet1]
+    expect(useMindmapStore.getState().data.sheets[0].id).toBe(sheet2Id);
+  });
 });

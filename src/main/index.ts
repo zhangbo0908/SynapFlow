@@ -7,8 +7,7 @@ import { readFile } from 'fs/promises'
 import { LocalMindmap, UserPreferences } from '../shared/types'
 import { UserDataManager } from './userData'
 
-// Disable sandbox and GPU to avoid issues in some environments
-app.commandLine.appendSwitch('no-sandbox')
+// Disable GPU to avoid issues in some environments
 app.commandLine.appendSwitch('disable-gpu')
 app.commandLine.appendSwitch('disable-software-rasterizer')
 
@@ -22,7 +21,7 @@ function createWindow(): void {
     ...(process.platform === 'linux' ? { icon: join(__dirname, '../../build/icon.png') } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false,
+      sandbox: true,
       contextIsolation: true,
     },
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',

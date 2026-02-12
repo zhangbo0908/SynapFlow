@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import * as fs from 'fs/promises'
+import writeFileAtomic from 'write-file-atomic'
 import { dialog } from 'electron'
 import { saveMindmap, openMindmap } from '../../src/main/fileSystem'
 import { LocalMindmap } from '../../src/shared/types'
@@ -17,12 +18,20 @@ vi.mock('electron', () => ({
 vi.mock('fs/promises', () => ({
   writeFile: vi.fn(),
   readFile: vi.fn(),
+  access: vi.fn(), // Needed for XMind check
+}))
+
+// Mock write-file-atomic
+vi.mock('write-file-atomic', () => ({
+  default: vi.fn(),
 }))
 
 describe('FileSystem Module', () => {
   const mockData: LocalMindmap = {
     version: '1.0',
-    rootId: 'root',
+    activeSheetId: 'sheet1', // Added required field
+    sheets: [], // Added required field
+    rootId: 'root', // Legacy fields
     nodes: {},
     theme: 'default',
     editorState: { zoom: 1, offset: { x: 0, y: 0 } },
@@ -33,14 +42,14 @@ describe('FileSystem Module', () => {
   })
 
   describe('saveMindmap', () => {
-    it('should write data to the provided file path', async () => {
+    it('should write data to the provided file path using atomic write', async () => {
       const filePath = '/path/to/file.synap'
       await saveMindmap(mockData, filePath)
       
-      expect(fs.writeFile).toHaveBeenCalledWith(
+      expect(writeFileAtomic).toHaveBeenCalledWith(
         filePath,
         JSON.stringify(mockData, null, 2),
-        'utf-8'
+        { encoding: 'utf-8' }
       )
     })
 
@@ -55,10 +64,10 @@ describe('FileSystem Module', () => {
       const result = await saveMindmap(mockData)
 
       expect(dialog.showSaveDialog).toHaveBeenCalled()
-      expect(fs.writeFile).toHaveBeenCalledWith(
+      expect(writeFileAtomic).toHaveBeenCalledWith(
         selectedPath,
         JSON.stringify(mockData, null, 2),
-        'utf-8'
+        { encoding: 'utf-8' }
       )
       expect(result).toEqual({ success: true, filePath: selectedPath })
     })
@@ -71,7 +80,7 @@ describe('FileSystem Module', () => {
 
       const result = await saveMindmap(mockData)
 
-      expect(fs.writeFile).not.toHaveBeenCalled()
+      expect(writeFileAtomic).not.toHaveBeenCalled()
       expect(result).toEqual({ success: false })
     })
   })

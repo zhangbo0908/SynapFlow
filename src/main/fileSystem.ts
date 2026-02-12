@@ -1,5 +1,6 @@
 import { dialog } from 'electron'
 import { readFile, writeFile, access } from 'fs/promises'
+import writeFileAtomic from 'write-file-atomic'
 import { LocalMindmap } from '../shared/types'
 import { normalize, extname } from 'path'
 import { generateXMindBuffer, parseXMindFile } from './xmindParser'
@@ -123,11 +124,11 @@ export async function saveMindmap(data: LocalMindmap, filePath?: string): Promis
       }
       
       const buffer = await generateXMindBuffer(data, existingBuffer)
-      await writeFile(targetPath, buffer)
+      await writeFileAtomic(targetPath, buffer)
       
     } else {
       // Default SynapFlow JSON format
-      await writeFile(targetPath, JSON.stringify(data, null, 2), 'utf-8')
+      await writeFileAtomic(targetPath, JSON.stringify(data, null, 2), { encoding: 'utf-8' })
     }
     
     return { success: true, filePath: targetPath }

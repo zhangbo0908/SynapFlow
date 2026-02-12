@@ -23,6 +23,7 @@ interface MindmapState {
   addSheet: () => void;
   deleteSheet: (id: string) => void;
   renameSheet: (id: string, title: string) => void;
+  reorderSheets: (fromIndex: number, toIndex: number) => void;
   setActiveSheet: (id: string) => void;
   
   // Node Actions (operate on active sheet)
@@ -217,6 +218,20 @@ export const useMindmapStore = create<MindmapState>((set) => ({
       state.history.future = [];
       sheet.title = title;
     }
+  })),
+
+  reorderSheets: (fromIndex, toIndex) => set(produce((state: MindmapState) => {
+    if (fromIndex < 0 || fromIndex >= state.data.sheets.length || 
+        toIndex < 0 || toIndex >= state.data.sheets.length || 
+        fromIndex === toIndex) {
+      return;
+    }
+
+    state.history.past.push(JSON.parse(JSON.stringify(state.data)));
+    state.history.future = [];
+
+    const [movedSheet] = state.data.sheets.splice(fromIndex, 1);
+    state.data.sheets.splice(toIndex, 0, movedSheet);
   })),
 
   setActiveSheet: (id) => set(produce((state: MindmapState) => {

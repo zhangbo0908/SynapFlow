@@ -9,6 +9,7 @@ const SheetBar: React.FC = () => {
   const addSheet = useMindmapStore(state => state.addSheet);
   const deleteSheet = useMindmapStore(state => state.deleteSheet);
   const renameSheet = useMindmapStore(state => state.renameSheet);
+  const reorderSheets = useMindmapStore(state => state.reorderSheets);
   
   const activeSheet = sheets?.find(s => s.id === activeSheetId);
   const nodeCount = activeSheet ? Object.keys(activeSheet.nodes).length : 0;
@@ -58,7 +59,25 @@ const SheetBar: React.FC = () => {
     e.preventDefault();
     setContextMenu({ x: e.clientX, y: e.clientY, sheetId });
   };
-  
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    e.dataTransfer.setData('sheetIndex', index.toString());
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    const fromIndex = parseInt(e.dataTransfer.getData('sheetIndex'), 10);
+    if (!isNaN(fromIndex) && fromIndex !== targetIndex) {
+      reorderSheets(fromIndex, targetIndex);
+    }
+  };
+
   const handleDeleteSheet = (id: string, title: string) => {
      if (sheets.length <= 1) return;
      if (confirm(`Are you sure you want to delete "${title}"?`)) {
@@ -72,9 +91,13 @@ const SheetBar: React.FC = () => {
   return (
     <div className="h-8 bg-canvas border-t border-ui-border flex items-center px-2 select-none justify-between shrink-0 relative transition-colors duration-200">
       <div className="flex items-center space-x-1 overflow-x-auto no-scrollbar flex-1 mr-4">
-        {sheets.map(sheet => (
+        {sheets.map((sheet, index) => (
           <div
             key={sheet.id}
+            draggable
+            onDragStart={(e) => handleDragStart(e, index)}
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, index)}
             className={clsx(
               "group relative flex items-center px-3 py-1 rounded-t text-xs cursor-pointer border-b-2 transition-colors min-w-[80px] justify-center",
               sheet.id === activeSheetId

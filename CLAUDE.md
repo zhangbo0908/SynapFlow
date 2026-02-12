@@ -178,6 +178,9 @@ XMind 支持位于 `src/main/xmindParser.ts`：
 - **设置**：`tests/setup.ts` 模拟了 Canvas API、ResizeObserver 和 localStorage
 - **模式**：主进程测试使用 `// @vitest-environment node` 指令
 - **模拟**：主进程测试中模拟了 JSZip 和 Electron API
+- **测试覆盖**：
+  - `tests/main/`：文件系统操作、XMind 解析/导出、用户数据管理
+  - `tests/renderer/`：布局引擎算法
 
 ### 构建系统
 
@@ -214,6 +217,29 @@ XMind 支持位于 `src/main/xmindParser.ts`：
 - 样式根据新层级自动更新
 - 移动后重新计算布局
 
+### 文本测量与节点尺寸
+
+`src/renderer/src/utils/measureText.ts` 实现节点尺寸计算：
+- 使用 Canvas 2D API 的 `measureText()` 方法测量文本宽度
+- 不同形状（`shape`）有不同的填充配置（`SHAPE_CONFIG`）
+- 菱形和椭圆形状需要 `minWidthRatio` 增加宽度以适应文本
+- 默认高度估算为 `fontSize * 1.4`
+
+### UI 状态管理
+
+`src/renderer/src/store/useUIStore.ts` 管理界面状态：
+- 使用 Zustand persist 中间件持久化到 `localStorage`
+- 存储键名为 `synapflow-ui-storage`
+- 主题模式：`light` | `dark` | `system`
+- 视图模式：`welcome` | `editor`
+
+### 用户数据管理
+
+`src/main/userData.ts` 管理用户偏好设置：
+- 存储路径：`${app.getPath('userData')}/preferences.json`
+- 包含最近文件列表（`recentFiles`）
+- 包含完成引导状态（`hasCompletedOnboarding`）
+
 ## 关键文件参考
 
 | 用途 | 文件 |
@@ -227,3 +253,5 @@ XMind 支持位于 `src/main/xmindParser.ts`：
 | 文件操作 | `src/main/fileSystem.ts` |
 | 主题预设 | `src/renderer/src/utils/themePresets.ts` |
 | 导出功能 | `src/renderer/src/utils/exportEngine.tsx` |
+| 文本测量 | `src/renderer/src/utils/measureText.ts` |
+| 用户数据管理 | `src/main/userData.ts` |

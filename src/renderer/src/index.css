@@ -13,6 +13,7 @@
     --color-primary: #3b82f6;
     --color-bg-node: #ffffff;
     --color-text-node: #1f2937;
+    --color-border-node: #3f3f46; /* zinc-700 */
   }
 
   .dark {
@@ -25,6 +26,7 @@
     --color-primary: #60a5fa; /* blue-400 */
     --color-bg-node: #27272a; /* zinc-800 */
     --color-text-node: #f4f4f5; /* zinc-100 */
+    --color-border-node: #d4d4d8; /* zinc-300 */
   }
 
   body {
