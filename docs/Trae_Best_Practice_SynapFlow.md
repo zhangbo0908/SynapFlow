@@ -2,7 +2,7 @@
 
 > **项目代号**：SynapFlow
 > **项目类型**：本地优先（Local-First）桌面端思维导图应用
-> **开发工具**：Trae IDE (Powered by Claude-3.5-Sonnet & Gemini-Pro)
+> **开发工具**：Trae IDE (Powered by Gemini-Pro)
 > **核心理念**：从自然语言需求到生产级软件交付的全链路智能协作
 
 ---
