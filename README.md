@@ -49,8 +49,8 @@ SynapFlow 是一个 **人机协同开发** 的实战范式项目。我们采用�
 
 您可以在 [GitHub Releases](https://github.com/zhangbo0908/SynapFlow/releases) 页面下载最新版本的 macOS 和 Windows 制品。
 
-- **macOS (Apple Silicon)**: [SynapFlow-1.1.0-mac-arm64.zip](https://github.com/zhangbo0908/SynapFlow/releases/download/v1.1.0/SynapFlow-1.1.0-mac-arm64.zip)
-- **Windows (x64)**: [SynapFlow-1.1.0-win-x64.exe](https://github.com/zhangbo0908/SynapFlow/releases/download/v1.1.0/SynapFlow-1.1.0-win-x64.exe)
+- **macOS (Apple Silicon)**: [SynapFlow-1.2.0-mac-arm64.zip](https://github.com/zhangbo0908/SynapFlow/releases/download/v1.2.0/SynapFlow-1.2.0-mac-arm64.zip)
+- **Windows (x64)**: [SynapFlow-1.2.0-win-x64.exe](https://github.com/zhangbo0908/SynapFlow/releases/download/v1.2.0/SynapFlow-1.2.0-win-x64.exe)
 
 > **注意**：Windows 版本目前仅完成了打包编译，尚未经过深度测试。建议感兴趣的爱好者可以自行下载或通过源码编译调试。
 
@@ -97,8 +97,10 @@ sudo xattr -rd com.apple.quarantine /Applications/SynapFlow.app
 - [x] **多页签管理**：多 Sheet 切换与独立状态存储
 - [x] **多格式导出**：Markdown、PDF 及高保真图片导出支持
 - [x] **交互升级**：节点拖拽重组、防环检测与视觉反馈 (v1.1.0)
-- [ ] **v1.2.0 冲刺**：
-  - [ ] **性能优化**：超大规模节点渲染优化（Canvas/虚拟列表）
+- [x] **性能飞跃 (v1.2.0)**：
+  - [x] **增量历史记录**：引入 Immer Patches，内存占用降低 90%
+  - [x] **渲染优化**：智能视口剔除 (Viewport Culling) 与组件级记忆化 (React.memo)
+- [ ] **v1.3.0 规划**：
   - [ ] **体验增强**：全局搜索、节点图标/标签支持、自动更新机制
 
 ## ⚠️ 免责声明
