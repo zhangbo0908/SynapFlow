@@ -87,7 +87,7 @@ sudo xattr -rd com.apple.quarantine /Applications/SynapFlow.app
 
 ## 🗓 开发进度
 
-当前版本：v1.1.0 (Drag & Drop Update)
+**当前版本**：v1.2.0（Performance Update）
 
 - [x] **基础架构**：Electron + React + TypeScript 环境搭建
 - [x] **核心编辑**：节点增删改、快捷键系统、Undo/Redo (20步)

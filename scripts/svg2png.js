@@ -1,6 +1,6 @@
-const { app, BrowserWindow } = require('electron');
-const path = require('path');
-const fs = require('fs');
+const { app, BrowserWindow } = require("electron");
+const path = require("path");
+const fs = require("fs");
 
 app.disableHardwareAcceleration();
 
@@ -12,12 +12,12 @@ app.whenReady().then(async () => {
     webPreferences: {
       offscreen: true,
       nodeIntegration: true,
-      contextIsolation: false
-    }
+      contextIsolation: false,
+    },
   });
 
-  const svgPath = path.resolve(__dirname, '../resources/logo.svg');
-  const svgContent = fs.readFileSync(svgPath, 'utf-8');
+  const svgPath = path.resolve(__dirname, "../resources/logo.svg");
+  const svgContent = fs.readFileSync(svgPath, "utf-8");
 
   // Inject SVG into HTML with explicit size
   const htmlContent = `
@@ -36,7 +36,8 @@ app.whenReady().then(async () => {
     </html>
   `;
 
-  const dataUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(htmlContent);
+  const dataUrl =
+    "data:text/html;charset=utf-8," + encodeURIComponent(htmlContent);
   await win.loadURL(dataUrl);
 
   // Wait for rendering
@@ -44,11 +45,14 @@ app.whenReady().then(async () => {
     try {
       const image = await win.capturePage();
       const pngBuffer = image.toPNG();
-      fs.writeFileSync(path.resolve(__dirname, '../resources/icon.png'), pngBuffer);
-      console.log('Successfully created resources/icon.png');
+      fs.writeFileSync(
+        path.resolve(__dirname, "../resources/icon.png"),
+        pngBuffer,
+      );
+      console.log("Successfully created resources/icon.png");
       app.quit();
     } catch (error) {
-      console.error('Failed to capture page:', error);
+      console.error("Failed to capture page:", error);
       app.exit(1);
     }
   }, 1000);

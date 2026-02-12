@@ -1,8 +1,8 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-export type ThemeMode = 'light' | 'dark' | 'system';
-export type ViewMode = 'welcome' | 'editor';
+export type ThemeMode = "light" | "dark" | "system";
+export type ViewMode = "welcome" | "editor";
 
 interface UIState {
   themeMode: ThemeMode;
@@ -16,16 +16,21 @@ interface UIState {
 export const useUIStore = create<UIState>()(
   persist(
     (set) => ({
-      themeMode: 'system',
+      themeMode: "system",
       isSidebarOpen: true,
-      viewMode: 'welcome',
+      viewMode: "welcome",
       setThemeMode: (mode) => set({ themeMode: mode }),
-      toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
+      toggleSidebar: () =>
+        set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
       setViewMode: (mode) => set({ viewMode: mode }),
     }),
     {
-      name: 'synapflow-ui-storage',
-      partialize: (state) => ({ themeMode: state.themeMode, isSidebarOpen: state.isSidebarOpen, viewMode: state.viewMode }),
-    }
-  )
+      name: "synapflow-ui-storage",
+      partialize: (state) => ({
+        themeMode: state.themeMode,
+        isSidebarOpen: state.isSidebarOpen,
+        viewMode: state.viewMode,
+      }),
+    },
+  ),
 );

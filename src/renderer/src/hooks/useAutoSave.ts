@@ -1,15 +1,14 @@
-
-import { useState, useEffect, useRef } from 'react';
-import { useMindmapStore } from '../store/useMindmapStore';
+import { useState, useEffect, useRef } from "react";
+import { useMindmapStore } from "../store/useMindmapStore";
 
 export const useAutoSave = () => {
   const data = useMindmapStore((state) => state.data);
   const currentFilePath = useMindmapStore((state) => state.currentFilePath);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null);
-  
+
   // Use a ref to store the last saved data string to compare against
-  const lastSavedSnapshot = useRef<string>('');
+  const lastSavedSnapshot = useRef<string>("");
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Effect 1: Handle File Switch (Reset snapshot)
@@ -27,7 +26,7 @@ export const useAutoSave = () => {
     if (!currentFilePath) return;
 
     const currentSnapshot = JSON.stringify(data);
-    
+
     // If data hasn't changed from last save/load, do nothing
     if (currentSnapshot === lastSavedSnapshot.current) {
       // If we reverted to a clean state (e.g. via undo), cancel pending save
@@ -40,7 +39,7 @@ export const useAutoSave = () => {
 
     // Data changed -> Schedule Save
     setIsSaving(true);
-    
+
     if (timerRef.current) clearTimeout(timerRef.current);
 
     timerRef.current = setTimeout(async () => {
@@ -49,7 +48,7 @@ export const useAutoSave = () => {
         setLastSavedTime(new Date());
         lastSavedSnapshot.current = JSON.stringify(data);
       } catch (error) {
-        console.error('Auto-save failed:', error);
+        console.error("Auto-save failed:", error);
       } finally {
         setIsSaving(false);
       }

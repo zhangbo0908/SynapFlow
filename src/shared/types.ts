@@ -3,13 +3,21 @@ export interface NodeStyle {
   color?: string;
   borderColor?: string;
   borderWidth?: number;
-  borderStyle?: 'solid' | 'dashed' | 'dotted' | 'none';
+  borderStyle?: "solid" | "dashed" | "dotted" | "none";
   borderRadius?: number;
   shadowColor?: string;
   shadowBlur?: number;
   fontSize?: number;
-  shape?: 'rectangle' | 'rounded' | 'ellipse' | 'diamond' | 'capsule' | 'hexagon' | 'cloud' | 'underline';
-  lineStyle?: 'straight' | 'bezier' | 'step';
+  shape?:
+    | "rectangle"
+    | "rounded"
+    | "ellipse"
+    | "diamond"
+    | "capsule"
+    | "hexagon"
+    | "cloud"
+    | "underline";
+  lineStyle?: "straight" | "bezier" | "step";
 }
 
 export interface MindmapNode {
@@ -30,12 +38,12 @@ export interface ThemeConfig {
   rootStyle: Partial<NodeStyle>;
   primaryStyle: Partial<NodeStyle>;
   secondaryStyle: Partial<NodeStyle>;
-  lineStyle: 'straight' | 'bezier' | 'step';
+  lineStyle: "straight" | "bezier" | "step";
   backgroundColor: string;
   palette?: string[];
 }
 
-export type LayoutType = 'logic' | 'mindmap' | 'orgChart';
+export type LayoutType = "logic" | "mindmap" | "orgChart";
 
 export interface Sheet {
   id: string;
@@ -70,12 +78,29 @@ export interface LocalMindmap {
 }
 
 export interface FileAPI {
-  open: (filePath?: string) => Promise<{ canceled: boolean; data?: LocalMindmap; filePath?: string }>;
-  save: (data: LocalMindmap, filePath?: string) => Promise<{ success: boolean; filePath?: string }>;
-  saveMarkdown: (content: string) => Promise<{ success: boolean; filePath?: string }>;
-  saveImage: (dataUrl: string, format: 'png' | 'jpeg') => Promise<{ success: boolean; filePath?: string }>;
-  savePdf: (data: ArrayBuffer) => Promise<{ success: boolean; filePath?: string }>;
-  importXMind: () => Promise<{ canceled: boolean; data?: LocalMindmap; filePath?: string; error?: string }>;
+  open: (
+    filePath?: string,
+  ) => Promise<{ canceled: boolean; data?: LocalMindmap; filePath?: string }>;
+  save: (
+    data: LocalMindmap,
+    filePath?: string,
+  ) => Promise<{ success: boolean; filePath?: string }>;
+  saveMarkdown: (
+    content: string,
+  ) => Promise<{ success: boolean; filePath?: string }>;
+  saveImage: (
+    dataUrl: string,
+    format: "png" | "jpeg",
+  ) => Promise<{ success: boolean; filePath?: string }>;
+  savePdf: (
+    data: ArrayBuffer,
+  ) => Promise<{ success: boolean; filePath?: string }>;
+  importXMind: () => Promise<{
+    canceled: boolean;
+    data?: LocalMindmap;
+    filePath?: string;
+    error?: string;
+  }>;
 }
 
 export interface UserPreferences {

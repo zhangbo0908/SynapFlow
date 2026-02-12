@@ -1,36 +1,45 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useMindmapStore } from '../store/useMindmapStore';
-import clsx from 'clsx';
+import React, { useState, useEffect, useRef } from "react";
+import { useMindmapStore } from "../store/useMindmapStore";
+import clsx from "clsx";
 
 const SheetBar: React.FC = () => {
-  const sheets = useMindmapStore(state => state.data.sheets);
-  const activeSheetId = useMindmapStore(state => state.data.activeSheetId);
-  const setActiveSheet = useMindmapStore(state => state.setActiveSheet);
-  const addSheet = useMindmapStore(state => state.addSheet);
-  const deleteSheet = useMindmapStore(state => state.deleteSheet);
-  const renameSheet = useMindmapStore(state => state.renameSheet);
-  const reorderSheets = useMindmapStore(state => state.reorderSheets);
-  
-  const activeSheet = sheets?.find(s => s.id === activeSheetId);
+  const sheets = useMindmapStore((state) => state.data.sheets);
+  const activeSheetId = useMindmapStore((state) => state.data.activeSheetId);
+  const setActiveSheet = useMindmapStore((state) => state.setActiveSheet);
+  const addSheet = useMindmapStore((state) => state.addSheet);
+  const deleteSheet = useMindmapStore((state) => state.deleteSheet);
+  const renameSheet = useMindmapStore((state) => state.renameSheet);
+  const reorderSheets = useMindmapStore((state) => state.reorderSheets);
+
+  const activeSheet = sheets?.find((s) => s.id === activeSheetId);
   const nodeCount = activeSheet ? Object.keys(activeSheet.nodes).length : 0;
-  const zoomLevel = activeSheet ? Math.round(activeSheet.editorState.zoom * 100) : 100;
+  const zoomLevel = activeSheet
+    ? Math.round(activeSheet.editorState.zoom * 100)
+    : 100;
 
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editValue, setEditValue] = useState('');
-  
+  const [editValue, setEditValue] = useState("");
+
   // Context Menu State
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; sheetId: string } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    sheetId: string;
+  } | null>(null);
   const contextMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (contextMenuRef.current && !contextMenuRef.current.contains(event.target as Node)) {
+      if (
+        contextMenuRef.current &&
+        !contextMenuRef.current.contains(event.target as Node)
+      ) {
         setContextMenu(null);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -48,42 +57,42 @@ const SheetBar: React.FC = () => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleFinishEdit();
-    } else if (e.key === 'Escape') {
+    } else if (e.key === "Escape") {
       setEditingId(null);
     }
   };
-  
+
   const handleContextMenu = (e: React.MouseEvent, sheetId: string) => {
     e.preventDefault();
     setContextMenu({ x: e.clientX, y: e.clientY, sheetId });
   };
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
-    e.dataTransfer.setData('sheetIndex', index.toString());
-    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData("sheetIndex", index.toString());
+    e.dataTransfer.effectAllowed = "move";
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+    e.dataTransfer.dropEffect = "move";
   };
 
   const handleDrop = (e: React.DragEvent, targetIndex: number) => {
     e.preventDefault();
-    const fromIndex = parseInt(e.dataTransfer.getData('sheetIndex'), 10);
+    const fromIndex = parseInt(e.dataTransfer.getData("sheetIndex"), 10);
     if (!isNaN(fromIndex) && fromIndex !== targetIndex) {
       reorderSheets(fromIndex, targetIndex);
     }
   };
 
   const handleDeleteSheet = (id: string, title: string) => {
-     if (sheets.length <= 1) return;
-     if (confirm(`Are you sure you want to delete "${title}"?`)) {
-        deleteSheet(id);
-     }
-     setContextMenu(null);
+    if (sheets.length <= 1) return;
+    if (confirm(`Are you sure you want to delete "${title}"?`)) {
+      deleteSheet(id);
+    }
+    setContextMenu(null);
   };
 
   if (!sheets) return null;
@@ -102,7 +111,7 @@ const SheetBar: React.FC = () => {
               "group relative flex items-center px-3 py-1 rounded-t text-xs cursor-pointer border-b-2 transition-colors min-w-[80px] justify-center",
               sheet.id === activeSheetId
                 ? "bg-panel border-brand text-brand font-medium shadow-sm"
-                : "bg-panel-hover border-transparent text-ui-secondary hover:bg-panel"
+                : "bg-panel-hover border-transparent text-ui-secondary hover:bg-panel",
             )}
             onClick={() => setActiveSheet(sheet.id)}
             onDoubleClick={() => handleStartEdit(sheet.id, sheet.title)}
@@ -113,18 +122,18 @@ const SheetBar: React.FC = () => {
                 autoFocus
                 className="w-16 px-1 py-0 text-xs bg-panel text-ui-primary border border-ui-border rounded outline-none focus:ring-1 focus:ring-brand"
                 value={editValue}
-                onChange={e => setEditValue(e.target.value)}
+                onChange={(e) => setEditValue(e.target.value)}
                 onBlur={handleFinishEdit}
                 onKeyDown={handleKeyDown}
-                onClick={e => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
               />
             ) : (
               <span>{sheet.title}</span>
             )}
           </div>
         ))}
-        
-        <button 
+
+        <button
           onClick={addSheet}
           className="p-1 hover:bg-panel-hover rounded text-ui-secondary hover:text-ui-primary w-6 h-6 flex items-center justify-center transition-colors"
           title="New Sheet"
@@ -137,36 +146,38 @@ const SheetBar: React.FC = () => {
         <div>Nodes: {nodeCount}</div>
         <div>Zoom: {zoomLevel}%</div>
       </div>
-      
+
       {/* Context Menu */}
       {contextMenu && (
-        <div 
-            ref={contextMenuRef}
-            className="absolute bg-panel border border-ui-border rounded shadow-lg py-1 z-50 min-w-[120px]"
-            style={{ left: contextMenu.x, top: contextMenu.y - 40 }} // Adjust position to be visible
+        <div
+          ref={contextMenuRef}
+          className="absolute bg-panel border border-ui-border rounded shadow-lg py-1 z-50 min-w-[120px]"
+          style={{ left: contextMenu.x, top: contextMenu.y - 40 }} // Adjust position to be visible
         >
-            <button 
-                className="w-full text-left px-4 py-1 hover:bg-panel-hover text-ui-primary text-xs transition-colors"
-                onClick={() => {
-                    const sheet = sheets.find(s => s.id === contextMenu.sheetId);
-                    if (sheet) handleStartEdit(sheet.id, sheet.title);
-                }}
-            >
-                Rename
-            </button>
-            <button 
-                className={clsx(
-                    "w-full text-left px-4 py-1 hover:bg-panel-hover text-xs transition-colors",
-                    sheets.length <= 1 ? "text-ui-secondary opacity-50 cursor-not-allowed" : "text-red-600"
-                )}
-                onClick={() => {
-                    const sheet = sheets.find(s => s.id === contextMenu.sheetId);
-                    if (sheet) handleDeleteSheet(sheet.id, sheet.title);
-                }}
-                disabled={sheets.length <= 1}
-            >
-                Delete
-            </button>
+          <button
+            className="w-full text-left px-4 py-1 hover:bg-panel-hover text-ui-primary text-xs transition-colors"
+            onClick={() => {
+              const sheet = sheets.find((s) => s.id === contextMenu.sheetId);
+              if (sheet) handleStartEdit(sheet.id, sheet.title);
+            }}
+          >
+            Rename
+          </button>
+          <button
+            className={clsx(
+              "w-full text-left px-4 py-1 hover:bg-panel-hover text-xs transition-colors",
+              sheets.length <= 1
+                ? "text-ui-secondary opacity-50 cursor-not-allowed"
+                : "text-red-600",
+            )}
+            onClick={() => {
+              const sheet = sheets.find((s) => s.id === contextMenu.sheetId);
+              if (sheet) handleDeleteSheet(sheet.id, sheet.title);
+            }}
+            disabled={sheets.length <= 1}
+          >
+            Delete
+          </button>
         </div>
       )}
     </div>

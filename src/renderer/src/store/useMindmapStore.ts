@@ -1,31 +1,45 @@
-import { create } from 'zustand';
-import { produce } from 'immer';
-import { v4 as uuidv4 } from 'uuid';
-import { LocalMindmap, MindmapNode, NodeStyle, LayoutType, Sheet } from '../../../shared/types';
-import { applyLayout } from '../utils/layoutEngine';
-import { THEME_PRESETS } from '../utils/themePresets';
-import { measureText } from '../utils/measureText';
+import { create } from "zustand";
+import { produceWithPatches, enablePatches, Patch, applyPatches } from "immer";
+import { v4 as uuidv4 } from "uuid";
+import {
+  LocalMindmap,
+  MindmapNode,
+  NodeStyle,
+  LayoutType,
+  Sheet,
+} from "../../../shared/types";
+import { applyLayout } from "../utils/layoutEngine";
+import { THEME_PRESETS } from "../utils/themePresets";
+import { measureText } from "../utils/measureText";
+
+// Enable Immer patches
+enablePatches();
+
+interface HistoryEntry {
+  patches: Patch[];
+  inversePatches: Patch[];
+}
 
 interface MindmapState {
   data: LocalMindmap;
   currentFilePath: string | null;
   viewCenterTrigger: number; // Increment to trigger view centering
   history: {
-    past: LocalMindmap[];
-    future: LocalMindmap[];
+    past: HistoryEntry[];
+    future: HistoryEntry[];
   };
-  
+
   // Actions
   setMindmap: (data: LocalMindmap) => void;
   setFilePath: (path: string | null) => void;
-  
+
   // Sheet Actions
   addSheet: () => void;
   deleteSheet: (id: string) => void;
   renameSheet: (id: string, title: string) => void;
   reorderSheets: (fromIndex: number, toIndex: number) => void;
   setActiveSheet: (id: string) => void;
-  
+
   // Node Actions (operate on active sheet)
   updateNodeText: (id: string, text: string) => void;
   updateNodeStyle: (id: string, style: Partial<NodeStyle>) => void;
@@ -33,7 +47,7 @@ interface MindmapState {
   addSiblingNode: (siblingId: string) => void;
   deleteNode: (id: string) => void;
   selectNode: (id: string | null) => void;
-  updateEditorState: (state: Partial<Sheet['editorState']>) => void;
+  updateEditorState: (state: Partial<Sheet["editorState"]>) => void;
   undo: () => void;
   redo: () => void;
   updateLayout: (layout: LayoutType) => void;
@@ -41,8 +55,11 @@ interface MindmapState {
   moveNode: (id: string, targetParentId: string) => void;
 }
 
-const createNode = (parentId: string, style: Partial<NodeStyle> = {}): MindmapNode => {
-  const text = '分支主题';
+const createNode = (
+  parentId: string,
+  style: Partial<NodeStyle> = {},
+): MindmapNode => {
+  const text = "分支主题";
   const { width, height } = measureText(text, style);
   return {
     id: uuidv4(),
@@ -53,20 +70,23 @@ const createNode = (parentId: string, style: Partial<NodeStyle> = {}): MindmapNo
     height,
     children: [],
     parentId,
-    style: Object.keys(style).length > 0 ? style : undefined
+    style: Object.keys(style).length > 0 ? style : undefined,
   };
 };
 
 // Helper to recursively delete nodes
-const deleteNodeRecursively = (nodes: Record<string, MindmapNode>, id: string) => {
+const deleteNodeRecursively = (
+  nodes: Record<string, MindmapNode>,
+  id: string,
+) => {
   const node = nodes[id];
   if (!node) return;
-  
+
   // Recursively delete children
-  node.children.forEach(childId => {
+  node.children.forEach((childId) => {
     deleteNodeRecursively(nodes, childId);
   });
-  
+
   // Delete self
   delete nodes[id];
 };
@@ -74,26 +94,58 @@ const deleteNodeRecursively = (nodes: Record<string, MindmapNode>, id: string) =
 // Helper to get active sheet from state (for internal use within produce)
 const getActiveSheet = (state: LocalMindmap): Sheet | undefined => {
   if (!state.sheets) return undefined;
-  return state.sheets.find(s => s.id === state.activeSheetId);
+  return state.sheets.find((s) => s.id === state.activeSheetId);
+};
+
+// Helper to update data with history support
+const updateData = (
+  set: any,
+  updater: (draft: LocalMindmap) => void,
+  options: { recordHistory?: boolean; triggerViewCenter?: boolean } = {},
+) => {
+  set((state: MindmapState) => {
+    const [nextData, patches, inversePatches] = produceWithPatches(
+      state.data,
+      updater,
+    );
+
+    if (patches.length === 0) return {};
+
+    let newHistory = state.history;
+    if (options.recordHistory) {
+      newHistory = {
+        past: [...state.history.past, { patches, inversePatches }].slice(-20),
+        future: [],
+      };
+    }
+
+    return {
+      data: nextData,
+      history: newHistory,
+      viewCenterTrigger: options.triggerViewCenter
+        ? state.viewCenterTrigger + 1
+        : state.viewCenterTrigger,
+    };
+  });
 };
 
 // Initial State Setup
-const initialSheetId = 'sheet-1';
-const initialRootId = 'root';
+const initialSheetId = "sheet-1";
+const initialRootId = "root";
 
 export const useMindmapStore = create<MindmapState>((set) => ({
   data: {
-    version: '0.7.0',
+    version: "0.7.0",
     activeSheetId: initialSheetId,
     sheets: [
       {
         id: initialSheetId,
-        title: 'Sheet 1',
+        title: "Sheet 1",
         rootId: initialRootId,
         nodes: {
           [initialRootId]: {
             id: initialRootId,
-            text: '中心主题',
+            text: "中心主题",
             x: 0,
             y: 0,
             width: 100,
@@ -102,12 +154,12 @@ export const useMindmapStore = create<MindmapState>((set) => ({
             isRoot: true,
           },
         },
-        theme: 'business',
+        theme: "business",
         editorState: {
           zoom: 1,
           offset: { x: 0, y: 0 },
         },
-      }
+      },
     ],
   },
   currentFilePath: null,
@@ -116,436 +168,489 @@ export const useMindmapStore = create<MindmapState>((set) => ({
     past: [],
     future: [],
   },
-  
-  setMindmap: (data) => set(produce((state: MindmapState) => {
-    // Migration Logic: If loading old format (no sheets), wrap it
-    if (!data.sheets || data.sheets.length === 0) {
-      const legacyData = data as any;
-      const newSheetId = uuidv4();
-      
-      // Construct a sheet from legacy data
-      const sheet: Sheet = {
-        id: newSheetId,
-        title: 'Sheet 1',
-        rootId: legacyData.rootId || 'root',
-        nodes: legacyData.nodes || {},
-        theme: legacyData.theme || 'default',
-        layout: legacyData.layout,
-        themeConfig: legacyData.themeConfig,
-        editorState: legacyData.editorState || { zoom: 1, offset: { x: 0, y: 0 } }
-      };
 
-      state.data = {
-        version: '0.7.0',
-        activeSheetId: newSheetId,
-        sheets: [sheet],
-        // Keep legacy fields if needed, or just overwrite
-      };
-    } else {
-      state.data = data;
-    }
+  setMindmap: (data) =>
+    updateData(
+      set,
+      (draft) => {
+        // Migration Logic
+        if (!data.sheets || data.sheets.length === 0) {
+          const legacyData = data as any;
+          const newSheetId = uuidv4();
 
-    state.history = { past: [], future: [] };
-    state.viewCenterTrigger += 1;
-    
-    // Apply layout for the active sheet
-    const activeSheet = getActiveSheet(state.data);
-    if (activeSheet) {
-      if (!activeSheet.layout) activeSheet.layout = 'logic';
-      applyLayout(activeSheet.rootId, activeSheet.nodes, activeSheet.layout);
-    }
-  })),
+          const sheet: Sheet = {
+            id: newSheetId,
+            title: "Sheet 1",
+            rootId: legacyData.rootId || "root",
+            nodes: legacyData.nodes || {},
+            theme: legacyData.theme || "default",
+            layout: legacyData.layout,
+            themeConfig: legacyData.themeConfig,
+            editorState: legacyData.editorState || {
+              zoom: 1,
+              offset: { x: 0, y: 0 },
+            },
+          };
+
+          draft.version = "0.7.0";
+          draft.activeSheetId = newSheetId;
+          draft.sheets = [sheet];
+        } else {
+          // Direct copy, but need to be careful with Immer draft
+          // We can't just assign draft = data, we have to copy properties
+          draft.version = data.version;
+          draft.activeSheetId = data.activeSheetId;
+          draft.sheets = data.sheets;
+        }
+
+        // Apply layout for the active sheet
+        const activeSheet = getActiveSheet(draft);
+        if (activeSheet) {
+          if (!activeSheet.layout) activeSheet.layout = "logic";
+          applyLayout(
+            activeSheet.rootId,
+            activeSheet.nodes,
+            activeSheet.layout,
+          );
+        }
+      },
+      { recordHistory: false, triggerViewCenter: true },
+    ), // setMindmap resets history effectively by replacing data, but we need to clear history explicitly below
 
   setFilePath: (path) => set({ currentFilePath: path }),
 
   // --- Sheet Actions ---
 
-  addSheet: () => set(produce((state: MindmapState) => {
-    state.history.past.push(JSON.parse(JSON.stringify(state.data)));
-    state.history.future = [];
+  addSheet: () =>
+    updateData(
+      set,
+      (draft) => {
+        const newSheetId = uuidv4();
+        const newRootId = uuidv4();
+        const newSheet: Sheet = {
+          id: newSheetId,
+          title: `Sheet ${draft.sheets.length + 1}`,
+          rootId: newRootId,
+          nodes: {
+            [newRootId]: {
+              id: newRootId,
+              text: "中心主题",
+              x: 0,
+              y: 0,
+              width: 100,
+              height: 40,
+              children: [],
+              isRoot: true,
+            },
+          },
+          theme: "business",
+          editorState: { zoom: 1, offset: { x: 0, y: 0 } },
+        };
 
-    const newSheetId = uuidv4();
-    const newRootId = uuidv4();
-    const newSheet: Sheet = {
-      id: newSheetId,
-      title: `Sheet ${state.data.sheets.length + 1}`,
-      rootId: newRootId,
-      nodes: {
-        [newRootId]: {
-          id: newRootId,
-          text: '中心主题',
-          x: 0,
-          y: 0,
-          width: 100,
-          height: 40,
-          children: [],
-          isRoot: true,
+        draft.sheets.push(newSheet);
+        draft.activeSheetId = newSheetId;
+      },
+      { recordHistory: true, triggerViewCenter: true },
+    ),
+
+  deleteSheet: (id) =>
+    updateData(
+      set,
+      (draft) => {
+        if (draft.sheets.length <= 1) return;
+
+        const index = draft.sheets.findIndex((s) => s.id === id);
+        if (index !== -1) {
+          draft.sheets.splice(index, 1);
+
+          if (draft.activeSheetId === id) {
+            draft.activeSheetId = draft.sheets[Math.max(0, index - 1)].id;
+          }
         }
       },
-      theme: 'business',
-      editorState: { zoom: 1, offset: { x: 0, y: 0 } }
-    };
-    
-    state.data.sheets.push(newSheet);
-    state.data.activeSheetId = newSheetId;
-    state.viewCenterTrigger += 1;
-  })),
+      { recordHistory: true, triggerViewCenter: true },
+    ),
 
-  deleteSheet: (id) => set(produce((state: MindmapState) => {
-    if (state.data.sheets.length <= 1) return; // Prevent deleting last sheet
+  renameSheet: (id, title) =>
+    updateData(
+      set,
+      (draft) => {
+        const sheet = draft.sheets.find((s) => s.id === id);
+        if (sheet) {
+          sheet.title = title;
+        }
+      },
+      { recordHistory: true },
+    ),
 
-    state.history.past.push(JSON.parse(JSON.stringify(state.data)));
-    state.history.future = [];
+  reorderSheets: (fromIndex, toIndex) =>
+    updateData(
+      set,
+      (draft) => {
+        if (
+          fromIndex < 0 ||
+          fromIndex >= draft.sheets.length ||
+          toIndex < 0 ||
+          toIndex >= draft.sheets.length ||
+          fromIndex === toIndex
+        ) {
+          return;
+        }
 
-    const index = state.data.sheets.findIndex(s => s.id === id);
-    if (index !== -1) {
-      state.data.sheets.splice(index, 1);
-      
-      // If we deleted the active sheet, switch to another one
-      if (state.data.activeSheetId === id) {
-        state.data.activeSheetId = state.data.sheets[Math.max(0, index - 1)].id;
-        state.viewCenterTrigger += 1;
-      }
-    }
-  })),
+        const [movedSheet] = draft.sheets.splice(fromIndex, 1);
+        draft.sheets.splice(toIndex, 0, movedSheet);
+      },
+      { recordHistory: true },
+    ),
 
-  renameSheet: (id, title) => set(produce((state: MindmapState) => {
-    const sheet = state.data.sheets.find(s => s.id === id);
-    if (sheet) {
-      // Not pushing history for simple rename? Or maybe we should?
-      // Let's push history for consistency
-      state.history.past.push(JSON.parse(JSON.stringify(state.data)));
-      state.history.future = [];
-      sheet.title = title;
-    }
-  })),
-
-  reorderSheets: (fromIndex, toIndex) => set(produce((state: MindmapState) => {
-    if (fromIndex < 0 || fromIndex >= state.data.sheets.length || 
-        toIndex < 0 || toIndex >= state.data.sheets.length || 
-        fromIndex === toIndex) {
-      return;
-    }
-
-    state.history.past.push(JSON.parse(JSON.stringify(state.data)));
-    state.history.future = [];
-
-    const [movedSheet] = state.data.sheets.splice(fromIndex, 1);
-    state.data.sheets.splice(toIndex, 0, movedSheet);
-  })),
-
-  setActiveSheet: (id) => set(produce((state: MindmapState) => {
-    const sheet = state.data.sheets.find(s => s.id === id);
-    if (sheet) {
-      state.data.activeSheetId = id;
-      // Ensure layout is applied when switching sheets, especially for imported files
-      // where background sheets might not have been laid out yet.
-      if (!sheet.layout) sheet.layout = 'logic';
-      applyLayout(sheet.rootId, sheet.nodes, sheet.layout);
-      state.viewCenterTrigger += 1;
-    }
-  })),
+  setActiveSheet: (id) =>
+    updateData(
+      set,
+      (draft) => {
+        const sheet = draft.sheets.find((s) => s.id === id);
+        if (sheet) {
+          draft.activeSheetId = id;
+          if (!sheet.layout) sheet.layout = "logic";
+          applyLayout(sheet.rootId, sheet.nodes, sheet.layout);
+        }
+      },
+      { recordHistory: false, triggerViewCenter: true },
+    ),
 
   // --- Node Actions ---
-  
-  undo: () => set(produce((state: MindmapState) => {
-    const previous = state.history.past.pop();
-    if (previous) {
-      state.history.future.push(JSON.parse(JSON.stringify(state.data)));
-      state.data = previous;
-    }
-  })),
 
-  redo: () => set(produce((state: MindmapState) => {
-    const next = state.history.future.pop();
-    if (next) {
-      state.history.past.push(JSON.parse(JSON.stringify(state.data)));
-      state.data = next;
-    }
-  })),
-  
-  updateNodeText: (id, text) => set(produce((state: MindmapState) => {
-    const sheet = getActiveSheet(state.data);
-    if (sheet && sheet.nodes[id]) {
-      state.history.past.push(JSON.parse(JSON.stringify(state.data)));
-      if (state.history.past.length > 20) state.history.past.shift();
-      state.history.future = [];
-
-      const node = sheet.nodes[id];
-      node.text = text;
-      
-      // Recalculate size
-      const theme = THEME_PRESETS[sheet.theme] || THEME_PRESETS.business;
-      // Simple logic to determine level style
-      let baseStyle = theme.secondaryStyle;
-      if (node.isRoot) {
-        baseStyle = theme.rootStyle;
-      } else if (node.parentId === sheet.rootId) {
-        baseStyle = theme.primaryStyle;
+  undo: () =>
+    set((state) => {
+      const lastEntry = state.history.past[state.history.past.length - 1];
+      if (lastEntry) {
+        const nextData = applyPatches(state.data, lastEntry.inversePatches);
+        return {
+          data: nextData,
+          history: {
+            past: state.history.past.slice(0, -1),
+            future: [...state.history.future, lastEntry],
+          },
+        };
       }
-      
-      const effectiveStyle = { ...baseStyle, ...node.style };
-      const { width, height } = measureText(text, effectiveStyle);
-      node.width = width;
-      node.height = height;
-      
-      applyLayout(sheet.rootId, sheet.nodes, sheet.layout || 'logic');
-    }
-  })),
+      return {};
+    }),
 
-  updateNodeStyle: (id, style) => set(produce((state: MindmapState) => {
-    const sheet = getActiveSheet(state.data);
-    if (sheet && sheet.nodes[id]) {
-      state.history.past.push(JSON.parse(JSON.stringify(state.data)));
-      if (state.history.past.length > 20) state.history.past.shift();
-      state.history.future = [];
+  redo: () =>
+    set((state) => {
+      const nextEntry = state.history.future[state.history.future.length - 1];
+      if (nextEntry) {
+        const nextData = applyPatches(state.data, nextEntry.patches);
+        return {
+          data: nextData,
+          history: {
+            past: [...state.history.past, nextEntry],
+            future: state.history.future.slice(0, -1),
+          },
+        };
+      }
+      return {};
+    }),
 
-      sheet.nodes[id].style = {
-        ...sheet.nodes[id].style,
-        ...style
-      };
-      
-      // Recalculate size if style affects dimensions
-      if (style.fontSize || style.shape || style.borderWidth) {
-        const node = sheet.nodes[id];
-        const theme = THEME_PRESETS[sheet.theme] || THEME_PRESETS.business;
-        let baseStyle = theme.secondaryStyle;
-        if (node.isRoot) {
-          baseStyle = theme.rootStyle;
-        } else if (node.parentId === sheet.rootId) {
-          baseStyle = theme.primaryStyle;
+  updateNodeText: (id, text) =>
+    updateData(
+      set,
+      (draft) => {
+        const sheet = getActiveSheet(draft);
+        if (sheet && sheet.nodes[id]) {
+          const node = sheet.nodes[id];
+          node.text = text;
+
+          const theme = THEME_PRESETS[sheet.theme] || THEME_PRESETS.business;
+          let baseStyle = theme.secondaryStyle;
+          if (node.isRoot) {
+            baseStyle = theme.rootStyle;
+          } else if (node.parentId === sheet.rootId) {
+            baseStyle = theme.primaryStyle;
+          }
+
+          const effectiveStyle = { ...baseStyle, ...node.style };
+          const { width, height } = measureText(text, effectiveStyle);
+          node.width = width;
+          node.height = height;
+
+          applyLayout(sheet.rootId, sheet.nodes, sheet.layout || "logic");
         }
-        
-        const effectiveStyle = { ...baseStyle, ...node.style };
-        const { width, height } = measureText(node.text, effectiveStyle);
-        node.width = width;
-        node.height = height;
-        
-        applyLayout(sheet.rootId, sheet.nodes, sheet.layout || 'logic');
-      }
-    }
-  })),
-  
-  addChildNode: (parentId) => set(produce((state: MindmapState) => {
-    const sheet = getActiveSheet(state.data);
-    if (!sheet) return;
+      },
+      { recordHistory: true },
+    ),
 
-    const parent = sheet.nodes[parentId];
-    if (parent) {
-      state.history.past.push(JSON.parse(JSON.stringify(state.data)));
-      if (state.history.past.length > 20) state.history.past.shift();
-      state.history.future = [];
+  updateNodeStyle: (id, style) =>
+    updateData(
+      set,
+      (draft) => {
+        const sheet = getActiveSheet(draft);
+        if (sheet && sheet.nodes[id]) {
+          sheet.nodes[id].style = {
+            ...sheet.nodes[id].style,
+            ...style,
+          };
 
-      // Determine style for new node based on theme and level
-      const theme = THEME_PRESETS[sheet.theme] || THEME_PRESETS.business;
-      let nodeStyle = theme.secondaryStyle; // Default for deeper levels
-      
-      // If parent is root, this is a primary node
-      if (parent.isRoot) {
-        nodeStyle = theme.primaryStyle;
-      }
-      
-      const newNode = createNode(parentId, nodeStyle);
-      sheet.nodes[newNode.id] = newNode;
-      parent.children.push(newNode.id);
-      
-      sheet.editorState.selectedId = newNode.id;
-      
-      applyLayout(sheet.rootId, sheet.nodes, sheet.layout || 'logic');
-    }
-  })),
-  
-  addSiblingNode: (siblingId) => set(produce((state: MindmapState) => {
-    const sheet = getActiveSheet(state.data);
-    if (!sheet) return;
+          if (style.fontSize || style.shape || style.borderWidth) {
+            const node = sheet.nodes[id];
+            const theme = THEME_PRESETS[sheet.theme] || THEME_PRESETS.business;
+            let baseStyle = theme.secondaryStyle;
+            if (node.isRoot) {
+              baseStyle = theme.rootStyle;
+            } else if (node.parentId === sheet.rootId) {
+              baseStyle = theme.primaryStyle;
+            }
 
-    const sibling = sheet.nodes[siblingId];
-    if (sibling && sibling.parentId) {
-      const parent = sheet.nodes[sibling.parentId];
-      if (parent) {
-        state.history.past.push(JSON.parse(JSON.stringify(state.data)));
-        if (state.history.past.length > 20) state.history.past.shift();
-        state.history.future = [];
+            const effectiveStyle = { ...baseStyle, ...node.style };
+            const { width, height } = measureText(node.text, effectiveStyle);
+            node.width = width;
+            node.height = height;
 
-        // Determine style for new node based on theme and level
-        const theme = THEME_PRESETS[sheet.theme] || THEME_PRESETS.business;
-        let nodeStyle = theme.secondaryStyle;
-        
-        // If parent is root, this is a primary node
-        if (parent.isRoot) {
-          nodeStyle = theme.primaryStyle;
+            applyLayout(sheet.rootId, sheet.nodes, sheet.layout || "logic");
+          }
         }
+      },
+      { recordHistory: true },
+    ),
 
-        const newNode = createNode(sibling.parentId, nodeStyle);
-        sheet.nodes[newNode.id] = newNode;
-        
-        const index = parent.children.indexOf(siblingId);
-        if (index !== -1) {
-          parent.children.splice(index + 1, 0, newNode.id);
-        } else {
+  addChildNode: (parentId) =>
+    updateData(
+      set,
+      (draft) => {
+        const sheet = getActiveSheet(draft);
+        if (!sheet) return;
+
+        const parent = sheet.nodes[parentId];
+        if (parent) {
+          const theme = THEME_PRESETS[sheet.theme] || THEME_PRESETS.business;
+          let nodeStyle = theme.secondaryStyle;
+
+          if (parent.isRoot) {
+            nodeStyle = theme.primaryStyle;
+          }
+
+          const newNode = createNode(parentId, nodeStyle);
+          sheet.nodes[newNode.id] = newNode;
           parent.children.push(newNode.id);
+
+          sheet.editorState.selectedId = newNode.id;
+
+          applyLayout(sheet.rootId, sheet.nodes, sheet.layout || "logic");
         }
-        
-        sheet.editorState.selectedId = newNode.id;
-        
-        applyLayout(sheet.rootId, sheet.nodes, sheet.layout || 'logic');
-      }
-    }
-  })),
-  
-  deleteNode: (id) => set(produce((state: MindmapState) => {
-    const sheet = getActiveSheet(state.data);
-    if (!sheet) return;
+      },
+      { recordHistory: true },
+    ),
 
-    const node = sheet.nodes[id];
-    if (node && !node.isRoot && node.parentId) {
-      const parent = sheet.nodes[node.parentId];
-      if (parent) {
-        state.history.past.push(JSON.parse(JSON.stringify(state.data)));
-        if (state.history.past.length > 20) state.history.past.shift();
-        state.history.future = [];
+  addSiblingNode: (siblingId) =>
+    updateData(
+      set,
+      (draft) => {
+        const sheet = getActiveSheet(draft);
+        if (!sheet) return;
 
-        const index = parent.children.indexOf(id);
-        if (index !== -1) {
-          parent.children.splice(index, 1);
+        const sibling = sheet.nodes[siblingId];
+        if (sibling && sibling.parentId) {
+          const parent = sheet.nodes[sibling.parentId];
+          if (parent) {
+            const theme = THEME_PRESETS[sheet.theme] || THEME_PRESETS.business;
+            let nodeStyle = theme.secondaryStyle;
+
+            if (parent.isRoot) {
+              nodeStyle = theme.primaryStyle;
+            }
+
+            const newNode = createNode(sibling.parentId, nodeStyle);
+            sheet.nodes[newNode.id] = newNode;
+
+            const index = parent.children.indexOf(siblingId);
+            if (index !== -1) {
+              parent.children.splice(index + 1, 0, newNode.id);
+            } else {
+              parent.children.push(newNode.id);
+            }
+
+            sheet.editorState.selectedId = newNode.id;
+
+            applyLayout(sheet.rootId, sheet.nodes, sheet.layout || "logic");
+          }
         }
-        
-        deleteNodeRecursively(sheet.nodes, id);
-        
-        sheet.editorState.selectedId = node.parentId;
-        
-        applyLayout(sheet.rootId, sheet.nodes, sheet.layout);
-      }
-    }
-  })),
-  
-  selectNode: (id) => set(produce((state: MindmapState) => {
-    const sheet = getActiveSheet(state.data);
-    if (sheet) {
-      sheet.editorState.selectedId = id || undefined;
-    }
-  })),
-  
-  updateEditorState: (editorState) => set(produce((state: MindmapState) => {
-    const sheet = getActiveSheet(state.data);
-    if (sheet) {
-      Object.assign(sheet.editorState, editorState);
-    }
-  })),
+      },
+      { recordHistory: true },
+    ),
 
-  updateLayout: (layout) => set(produce((state: MindmapState) => {
-    const sheet = getActiveSheet(state.data);
-    if (sheet) {
-      sheet.layout = layout;
-      applyLayout(sheet.rootId, sheet.nodes, sheet.layout);
-      state.viewCenterTrigger += 1;
-    }
-  })),
+  deleteNode: (id) =>
+    updateData(
+      set,
+      (draft) => {
+        const sheet = getActiveSheet(draft);
+        if (!sheet) return;
 
-  updateTheme: (themeName) => set(produce((state: MindmapState) => {
-    const sheet = getActiveSheet(state.data);
-    if (!sheet) return;
+        const node = sheet.nodes[id];
+        if (node && !node.isRoot && node.parentId) {
+          const parent = sheet.nodes[node.parentId];
+          if (parent) {
+            const index = parent.children.indexOf(id);
+            if (index !== -1) {
+              parent.children.splice(index, 1);
+            }
 
-    const theme = THEME_PRESETS[themeName];
-    if (!theme) return;
+            deleteNodeRecursively(sheet.nodes, id);
 
-    sheet.theme = themeName;
-    sheet.themeConfig = theme;
+            sheet.editorState.selectedId = node.parentId;
 
-    const applyStyle = (nodeId: string, isRoot: boolean) => {
-      const node = sheet.nodes[nodeId];
-      if (!node) return;
+            applyLayout(sheet.rootId, sheet.nodes, sheet.layout);
+          }
+        }
+      },
+      { recordHistory: true },
+    ),
 
-      if (isRoot) {
-        node.style = { ...theme.rootStyle };
-      } else if (node.parentId === sheet.rootId) {
-        node.style = { ...theme.primaryStyle };
-      } else {
-        node.style = { ...theme.secondaryStyle };
-      }
-      
-      // Recalculate size
-      const { width, height } = measureText(node.text, node.style);
-      node.width = width;
-      node.height = height;
+  selectNode: (id) =>
+    updateData(
+      set,
+      (draft) => {
+        const sheet = getActiveSheet(draft);
+        if (sheet) {
+          sheet.editorState.selectedId = id || undefined;
+        }
+      },
+      { recordHistory: false },
+    ),
 
-      node.children.forEach(childId => applyStyle(childId, false));
-    };
+  updateEditorState: (editorState) =>
+    updateData(
+      set,
+      (draft) => {
+        const sheet = getActiveSheet(draft);
+        if (sheet) {
+          Object.assign(sheet.editorState, editorState);
+        }
+      },
+      { recordHistory: false },
+    ),
 
-    applyStyle(sheet.rootId, true);
-    applyLayout(sheet.rootId, sheet.nodes, sheet.layout || 'logic');
-  })),
+  updateLayout: (layout) =>
+    updateData(
+      set,
+      (draft) => {
+        const sheet = getActiveSheet(draft);
+        if (sheet) {
+          sheet.layout = layout;
+          applyLayout(sheet.rootId, sheet.nodes, sheet.layout);
+        }
+      },
+      { recordHistory: false, triggerViewCenter: true },
+    ),
 
-  moveNode: (id, targetParentId) => set(produce((state: MindmapState) => {
-    const sheet = getActiveSheet(state.data);
-    if (!sheet) return;
-    
-    // Validation
-    if (id === targetParentId) return; // Can't move to self
-    const node = sheet.nodes[id];
-    const targetParent = sheet.nodes[targetParentId];
-    if (!node || !targetParent) return;
-    if (node.parentId === targetParentId) return; // Already there
-    if (node.isRoot) return; // Can't move root
+  updateTheme: (themeName) =>
+    updateData(
+      set,
+      (draft) => {
+        const sheet = getActiveSheet(draft);
+        if (!sheet) return;
 
-    // Cycle detection: Check if targetParentId is a descendant of id
-    let currentId = targetParentId;
-    let isCycle = false;
-    while (currentId && sheet.nodes[currentId]) {
-        if (currentId === id) {
+        const theme = THEME_PRESETS[themeName];
+        if (!theme) return;
+
+        sheet.theme = themeName;
+        sheet.themeConfig = theme;
+
+        const applyStyle = (nodeId: string, isRoot: boolean) => {
+          const node = sheet.nodes[nodeId];
+          if (!node) return;
+
+          if (isRoot) {
+            node.style = { ...theme.rootStyle };
+          } else if (node.parentId === sheet.rootId) {
+            node.style = { ...theme.primaryStyle };
+          } else {
+            node.style = { ...theme.secondaryStyle };
+          }
+
+          const { width, height } = measureText(node.text, node.style);
+          node.width = width;
+          node.height = height;
+
+          node.children.forEach((childId) => applyStyle(childId, false));
+        };
+
+        applyStyle(sheet.rootId, true);
+        applyLayout(sheet.rootId, sheet.nodes, sheet.layout || "logic");
+      },
+      { recordHistory: false },
+    ), // Keeping consistent with previous behavior
+
+  moveNode: (id, targetParentId) =>
+    updateData(
+      set,
+      (draft) => {
+        const sheet = getActiveSheet(draft);
+        if (!sheet) return;
+
+        // Validation
+        if (id === targetParentId) return;
+        const node = sheet.nodes[id];
+        const targetParent = sheet.nodes[targetParentId];
+        if (!node || !targetParent) return;
+        if (node.parentId === targetParentId) return;
+        if (node.isRoot) return;
+
+        // Cycle detection
+        let currentId = targetParentId;
+        let isCycle = false;
+        while (currentId && sheet.nodes[currentId]) {
+          if (currentId === id) {
             isCycle = true;
             break;
+          }
+          if (sheet.nodes[currentId].isRoot) break;
+          currentId = sheet.nodes[currentId].parentId || "";
         }
-        // Move up
-        if (sheet.nodes[currentId].isRoot) break;
-        currentId = sheet.nodes[currentId].parentId || '';
-    }
-    if (isCycle) return;
+        if (isCycle) return;
 
-    // Proceed with move
-    state.history.past.push(JSON.parse(JSON.stringify(state.data)));
-    if (state.history.past.length > 20) state.history.past.shift();
-    state.history.future = [];
-
-    // 1. Remove from old parent
-    if (node.parentId) {
-        const oldParent = sheet.nodes[node.parentId];
-        if (oldParent) {
+        // 1. Remove from old parent
+        if (node.parentId) {
+          const oldParent = sheet.nodes[node.parentId];
+          if (oldParent) {
             const idx = oldParent.children.indexOf(id);
             if (idx !== -1) oldParent.children.splice(idx, 1);
+          }
         }
-    }
 
-    // 2. Add to new parent
-    targetParent.children.push(id);
-    node.parentId = targetParentId;
+        // 2. Add to new parent
+        targetParent.children.push(id);
+        node.parentId = targetParentId;
 
-    // 3. Update Styles based on new level
-    const theme = THEME_PRESETS[sheet.theme] || THEME_PRESETS.business;
-    
-    const updateStylesRecursively = (nId: string, isChildOfRoot: boolean) => {
-        const n = sheet.nodes[nId];
-        if (!n) return;
-        
-        let newStyleBase = isChildOfRoot ? theme.primaryStyle : theme.secondaryStyle;
-        
-        // Update structural styles from theme, keep others if needed
-        n.style = { 
-          ...n.style,
-          fontSize: newStyleBase.fontSize,
-          // Remove paddingX/Y as they are not in NodeStyle
+        // 3. Update Styles
+        const theme = THEME_PRESETS[sheet.theme] || THEME_PRESETS.business;
+
+        const updateStylesRecursively = (
+          nId: string,
+          isChildOfRoot: boolean,
+        ) => {
+          const n = sheet.nodes[nId];
+          if (!n) return;
+
+          const newStyleBase = isChildOfRoot
+            ? theme.primaryStyle
+            : theme.secondaryStyle;
+
+          n.style = {
+            ...n.style,
+            fontSize: newStyleBase.fontSize,
+          };
+
+          const { width, height } = measureText(n.text, n.style);
+          n.width = width;
+          n.height = height;
+
+          n.children.forEach((cId) => updateStylesRecursively(cId, false));
         };
-        
-        const { width, height } = measureText(n.text, n.style);
-        n.width = width;
-        n.height = height;
 
-        n.children.forEach(cId => updateStylesRecursively(cId, false));
-    }
+        updateStylesRecursively(id, !!targetParent.isRoot);
 
-    updateStylesRecursively(id, !!targetParent.isRoot);
-
-    // 4. Layout
-    applyLayout(sheet.rootId, sheet.nodes, sheet.layout || 'logic');
-  })),
+        // 4. Layout
+        applyLayout(sheet.rootId, sheet.nodes, sheet.layout || "logic");
+      },
+      { recordHistory: true },
+    ),
 }));

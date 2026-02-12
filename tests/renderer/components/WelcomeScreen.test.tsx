@@ -1,11 +1,11 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import WelcomeScreen from '../../../src/renderer/src/components/WelcomeScreen';
-import { useUIStore } from '../../../src/renderer/src/store/useUIStore';
+import React from "react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import WelcomeScreen from "../../../src/renderer/src/components/WelcomeScreen";
+import { useUIStore } from "../../../src/renderer/src/store/useUIStore";
 
 // Mock UI Store
-vi.mock('../../../src/renderer/src/store/useUIStore', () => ({
+vi.mock("../../../src/renderer/src/store/useUIStore", () => ({
   useUIStore: vi.fn(),
 }));
 
@@ -24,87 +24,98 @@ window.api = {
   },
 } as any;
 
-describe('WelcomeScreen', () => {
+describe("WelcomeScreen", () => {
   const setViewMode = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     (useUIStore as any).mockReturnValue(setViewMode);
-    
+
     // Default mock implementation
     mockGetRecentFiles.mockResolvedValue([]);
     mockOpen.mockResolvedValue({ canceled: true });
   });
 
-  it('renders correctly', async () => {
+  it("renders correctly", async () => {
     render(<WelcomeScreen />);
     // Wait for effect to settle to avoid act warnings
     await waitFor(() => {
-      expect(screen.getByText('SynapFlow')).toBeInTheDocument();
+      expect(screen.getByText("SynapFlow")).toBeInTheDocument();
     });
   });
 
-  it('displays logo and title', async () => {
+  it("displays logo and title", async () => {
     render(<WelcomeScreen />);
     await waitFor(() => {
-      expect(screen.getByText('SynapFlow')).toBeInTheDocument();
+      expect(screen.getByText("SynapFlow")).toBeInTheDocument();
     });
   });
 
-  it('has action buttons', async () => {
+  it("has action buttons", async () => {
     render(<WelcomeScreen />);
     await waitFor(() => {
-      expect(screen.getByText('新建思维导图')).toBeInTheDocument();
-      expect(screen.getByText('打开文件')).toBeInTheDocument();
+      expect(screen.getByText("新建思维导图")).toBeInTheDocument();
+      expect(screen.getByText("打开文件")).toBeInTheDocument();
     });
   });
 
-  it('loads recent files on mount', async () => {
-    mockGetRecentFiles.mockResolvedValue(['/path/to/file1.synap', '/path/to/file2.synap']);
+  it("loads recent files on mount", async () => {
+    mockGetRecentFiles.mockResolvedValue([
+      "/path/to/file1.synap",
+      "/path/to/file2.synap",
+    ]);
     render(<WelcomeScreen />);
-    
+
     await waitFor(() => {
-      expect(screen.getByText('最近文件')).toBeInTheDocument();
+      expect(screen.getByText("最近文件")).toBeInTheDocument();
       // file1.synap will be in the file name part
-      expect(screen.getAllByText('file1.synap').length).toBeGreaterThan(0);
+      expect(screen.getAllByText("file1.synap").length).toBeGreaterThan(0);
     });
   });
 
-  it('handles New Mindmap click', () => {
+  it("handles New Mindmap click", () => {
     render(<WelcomeScreen />);
-    fireEvent.click(screen.getByText('新建思维导图'));
-    expect(setViewMode).toHaveBeenCalledWith('editor');
+    fireEvent.click(screen.getByText("新建思维导图"));
+    expect(setViewMode).toHaveBeenCalledWith("editor");
   });
 
-  it('handles Open File click (success)', async () => {
-    mockOpen.mockResolvedValue({ canceled: false, data: {}, filePath: '/path/to/file.synap' });
+  it("handles Open File click (success)", async () => {
+    mockOpen.mockResolvedValue({
+      canceled: false,
+      data: {},
+      filePath: "/path/to/file.synap",
+    });
     render(<WelcomeScreen />);
-    
-    fireEvent.click(screen.getByText('打开文件'));
-    
+
+    fireEvent.click(screen.getByText("打开文件"));
+
     await waitFor(() => {
       expect(mockOpen).toHaveBeenCalled();
-      expect(setViewMode).toHaveBeenCalledWith('editor');
+      expect(setViewMode).toHaveBeenCalledWith("editor");
     });
   });
 
-  it('handles Recent File click', async () => {
-    mockGetRecentFiles.mockResolvedValue(['/path/to/recent.synap']);
-    mockOpen.mockResolvedValue({ canceled: false, data: {}, filePath: '/path/to/recent.synap' });
-    
+  it("handles Recent File click", async () => {
+    mockGetRecentFiles.mockResolvedValue(["/path/to/recent.synap"]);
+    mockOpen.mockResolvedValue({
+      canceled: false,
+      data: {},
+      filePath: "/path/to/recent.synap",
+    });
+
     render(<WelcomeScreen />);
-    
+
     await waitFor(() => {
       // Expect at least one element with the filename
-      expect(screen.getAllByText('recent.synap').length).toBeGreaterThan(0);
+      expect(screen.getAllByText("recent.synap").length).toBeGreaterThan(0);
     });
-    
+
     // Click the first one found (the button or the text inside it)
-    fireEvent.click(screen.getAllByText('recent.synap')[0]);
-    
+    fireEvent.click(screen.getAllByText("recent.synap")[0]);
+
     await waitFor(() => {
-      expect(mockOpen).toHaveBeenCalledWith('/path/to/recent.synap');
-      expect(setViewMode).toHaveBeenCalledWith('editor');
+      expect(mockOpen).toHaveBeenCalledWith("/path/to/recent.synap");
+      expect(setViewMode).toHaveBeenCalledWith("editor");
     });
   });
 });

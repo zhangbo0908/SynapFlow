@@ -1,6 +1,6 @@
-import React from 'react';
-import { MindmapNode, LayoutType } from '../../../shared/types';
-import NodeComponent from './NodeComponent';
+import React from "react";
+import { MindmapNode, LayoutType } from "../../../shared/types";
+import NodeComponent from "./NodeComponent";
 
 interface ViewportState {
   width: number;
@@ -31,22 +31,28 @@ interface MindmapRendererProps {
 const MindmapRenderer: React.FC<MindmapRendererProps> = ({
   rootId,
   nodes,
-  layout = 'logic',
+  layout = "logic",
   culling = true,
   viewport,
   styleConfig,
   onNodeDragStart,
-  dropTargetId
+  dropTargetId,
 }) => {
   const isNodeVisible = (node: MindmapNode) => {
     // If culling is disabled, everything is visible
     if (!culling) return true;
-    
+
     // If viewport is not provided but culling is enabled, we can't cull effectively
     // so we default to visible or maybe hidden? Default to visible to be safe.
     if (!viewport || viewport.width === 0 || viewport.height === 0) return true;
 
-    const { x: offsetX, y: offsetY, zoom, width: viewportWidth, height: viewportHeight } = viewport;
+    const {
+      x: offsetX,
+      y: offsetY,
+      zoom,
+      width: viewportWidth,
+      height: viewportHeight,
+    } = viewport;
 
     const screenX = node.x * zoom + offsetX;
     const screenY = node.y * zoom + offsetY;
@@ -68,21 +74,23 @@ const MindmapRenderer: React.FC<MindmapRendererProps> = ({
     const node = nodes[nodeId];
     if (!node) return [];
 
-    const childElements = node.children.flatMap(childId => renderNodesRecursive(childId));
-    
+    const childElements = node.children.flatMap((childId) =>
+      renderNodesRecursive(childId),
+    );
+
     const visible = isNodeVisible(node);
 
     if (visible) {
       return [
-        <NodeComponent 
-          key={nodeId} 
-          nodeId={nodeId} 
-          node={node} 
-          styleConfig={styleConfig} 
+        <NodeComponent
+          key={nodeId}
+          nodeId={nodeId}
+          node={node}
+          styleConfig={styleConfig}
           onNodeDragStart={onNodeDragStart}
           isDropTarget={dropTargetId === nodeId}
         />,
-        ...childElements
+        ...childElements,
       ];
     } else {
       return childElements;
@@ -97,37 +105,37 @@ const MindmapRenderer: React.FC<MindmapRendererProps> = ({
 
     return (
       <React.Fragment key={`conn-${nodeId}`}>
-        {node.children.map(childId => {
+        {node.children.map((childId) => {
           const child = nodes[childId];
           if (!child) return null;
-          
+
           const childVisible = isNodeVisible(child);
 
           // Optimization: Cull connection if both start and end nodes are not visible
           if (!parentVisible && !childVisible) return null;
-          
+
           let startX, startY, endX, endY;
           let cp1X, cp1Y, cp2X, cp2Y;
 
-          if (layout === 'orgChart') {
+          if (layout === "orgChart") {
             // Top to Bottom
             startX = node.x + node.width / 2;
             startY = node.y + node.height;
             endX = child.x + child.width / 2;
             endY = child.y;
-            
+
             const midY = (startY + endY) / 2;
             cp1X = startX;
             cp1Y = midY;
             cp2X = endX;
             cp2Y = midY;
-          } else if (layout === 'mindmap' && child.x < node.x) {
+          } else if (layout === "mindmap" && child.x < node.x) {
             // Left side of Mindmap
             startX = node.x;
             startY = node.y + node.height / 2;
             endX = child.x + child.width;
             endY = child.y + child.height / 2;
-            
+
             const midX = (startX + endX) / 2;
             cp1X = midX;
             cp1Y = startY;
@@ -147,38 +155,46 @@ const MindmapRenderer: React.FC<MindmapRendererProps> = ({
             cp2Y = endY;
           }
 
-          let d = '';
-          const lineStyle = node.style?.lineStyle || 'bezier';
+          let d = "";
+          const lineStyle = node.style?.lineStyle || "bezier";
 
           switch (lineStyle) {
-            case 'straight':
+            case "straight":
               d = `M ${startX} ${startY} L ${endX} ${endY}`;
-              break
-            case 'step':
-              if (layout === 'orgChart') {
-                 d = `M ${startX} ${startY} L ${startX} ${(startY + endY) / 2} L ${endX} ${(startY + endY) / 2} L ${endX} ${endY}`;
+              break;
+            case "step":
+              if (layout === "orgChart") {
+                d = `M ${startX} ${startY} L ${startX} ${(startY + endY) / 2} L ${endX} ${(startY + endY) / 2} L ${endX} ${endY}`;
               } else {
-                 d = `M ${startX} ${startY} L ${(startX + endX) / 2} ${startY} L ${(startX + endX) / 2} ${endY} L ${endX} ${endY}`;
+                d = `M ${startX} ${startY} L ${(startX + endX) / 2} ${startY} L ${(startX + endX) / 2} ${endY} L ${endX} ${endY}`;
               }
-              break
-            case 'bezier':
+              break;
+            case "bezier":
             default:
               d = `M ${startX} ${startY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${endX} ${endY}`;
-              break
+              break;
           }
 
           return (
             <path
               key={`${node.id}-${child.id}`}
               d={d}
-              className={!styleConfig?.lineColor ? "stroke-gray-300 dark:stroke-zinc-600 transition-colors" : undefined}
-              style={styleConfig?.lineColor ? { stroke: styleConfig.lineColor } : undefined}
+              className={
+                !styleConfig?.lineColor
+                  ? "stroke-gray-300 dark:stroke-zinc-600 transition-colors"
+                  : undefined
+              }
+              style={
+                styleConfig?.lineColor
+                  ? { stroke: styleConfig.lineColor }
+                  : undefined
+              }
               strokeWidth="2"
               fill="none"
             />
           );
         })}
-        {node.children.map(childId => renderConnections(childId))}
+        {node.children.map((childId) => renderConnections(childId))}
       </React.Fragment>
     );
   };

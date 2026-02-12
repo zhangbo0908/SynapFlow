@@ -1,11 +1,14 @@
-import React from 'react';
+import React from "react";
 
 interface OnboardingOverlayProps {
   visible: boolean;
   onComplete: () => void;
 }
 
-export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ visible, onComplete }) => {
+export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({
+  visible,
+  onComplete,
+}) => {
   if (!visible) return null;
 
   return (
