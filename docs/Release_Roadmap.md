@@ -73,8 +73,27 @@
 ## 阶段四：未来展望 (Future)
 **目标**：从工具向平台延伸，增强个性化与效率。
 
-### v1.1.0+
-- [ ] [Feature] **节点拖拽重组 (Drag & Drop Reorg)**：支持通过拖拽改变节点层级与父子关系，实现直观的结构调整。
+### v1.1.0 - 交互升级 (Interaction)
+- [x] [Feature] **节点拖拽重组 (Drag & Drop Reorg)**：支持通过拖拽改变节点层级与父子关系，直观调整结构。
+- [x] [UX] **防环检测**：拖拽时自动检测循环引用并阻止非法操作。
+- [x] [UX] **吸附反馈**：拖拽过程中提供明确的目标节点高亮反馈。
+
+### v1.2.0 - 性能飞跃 (Performance)
+- [x] [Tech] **增量历史记录 (Incremental History)**：引入 Immer Patches，内存占用降低 90%。
+- [x] [Tech] **渲染优化**：实现视口剔除 (Viewport Culling) 与组件级记忆化 (React.memo)，保障千级节点流畅度。
+- [x] [Release] macOS (.zip) 与 Windows (.exe) 安装包构建发布。
+
+---
+
+## 阶段四：未来展望 (Future)
+**目标**：从工具向平台延伸，增强个性化与效率。
+
+### v1.5.0 - 体验精进 (Experience Polish)
+- [ ] [Feature] **全键盘导航 (Full Keyboard Navigation)**：支持方向键在节点间切换焦点。
+- [ ] [Feature] **动态布局算法 (Dynamic Layout)**：间距随层级递减，同级节点动态避让。
+- [ ] [Feature] **XMind 视觉增强**：支持菱形/云朵等特殊形状及线条样式 1:1 还原。
+
+### v1.6.0+
 - [ ] [Feature] **高级样式自定义**：用户自定义主题生成器。
 - [ ] [Feature] **富文本支持**：节点内支持 Markdown 语法、插入图片附件。
 - [ ] [Feature] **Zen 模式**：全屏沉浸式编辑。
