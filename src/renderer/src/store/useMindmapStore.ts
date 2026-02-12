@@ -53,6 +53,7 @@ interface MindmapState {
   updateLayout: (layout: LayoutType) => void;
   updateTheme: (themeName: string) => void;
   moveNode: (id: string, targetParentId: string) => void;
+  navigateNode: (direction: "up" | "down" | "left" | "right") => void;
 }
 
 const createNode = (
@@ -422,13 +423,22 @@ export const useMindmapStore = create<MindmapState>((set) => ({
         const parent = sheet.nodes[parentId];
         if (parent) {
           const theme = THEME_PRESETS[sheet.theme] || THEME_PRESETS.business;
-          let nodeStyle = theme.secondaryStyle;
-
+          // Determine the default style for measurement based on hierarchy
+          // We use this ONLY for measuring text size, but do NOT save it to node.style
+          // This allows the node to dynamically inherit theme styles (colors, etc.)
+          let measureStyle = theme.secondaryStyle;
           if (parent.isRoot) {
-            nodeStyle = theme.primaryStyle;
+            measureStyle = theme.primaryStyle;
           }
 
-          const newNode = createNode(parentId, nodeStyle);
+          // Create node with empty style (undefined) so it inherits from theme at render time
+          const newNode = createNode(parentId, {});
+          
+          // Correct the size based on the theme's font size
+          const { width, height } = measureText(newNode.text, measureStyle);
+          newNode.width = width;
+          newNode.height = height;
+
           sheet.nodes[newNode.id] = newNode;
           parent.children.push(newNode.id);
 
@@ -452,13 +462,21 @@ export const useMindmapStore = create<MindmapState>((set) => ({
           const parent = sheet.nodes[sibling.parentId];
           if (parent) {
             const theme = THEME_PRESETS[sheet.theme] || THEME_PRESETS.business;
-            let nodeStyle = theme.secondaryStyle;
-
+            
+            // Determine measurement style
+            let measureStyle = theme.secondaryStyle;
             if (parent.isRoot) {
-              nodeStyle = theme.primaryStyle;
+              measureStyle = theme.primaryStyle;
             }
 
-            const newNode = createNode(sibling.parentId, nodeStyle);
+            // Create node with empty style
+            const newNode = createNode(sibling.parentId, {});
+            
+            // Correct the size
+            const { width, height } = measureText(newNode.text, measureStyle);
+            newNode.width = width;
+            newNode.height = height;
+
             sheet.nodes[newNode.id] = newNode;
 
             const index = parent.children.indexOf(siblingId);
@@ -558,15 +576,19 @@ export const useMindmapStore = create<MindmapState>((set) => ({
           const node = sheet.nodes[nodeId];
           if (!node) return;
 
+          // Determine measurement style (but don't save to node.style)
+          let measureStyle = theme.secondaryStyle;
           if (isRoot) {
-            node.style = { ...theme.rootStyle };
+            measureStyle = theme.rootStyle;
           } else if (node.parentId === sheet.rootId) {
-            node.style = { ...theme.primaryStyle };
-          } else {
-            node.style = { ...theme.secondaryStyle };
+            measureStyle = theme.primaryStyle;
           }
 
-          const { width, height } = measureText(node.text, node.style);
+          // Clear node.style to allow dynamic theming
+          // We only keep overrides if we had a way to distinguish them, but standard theme update resets styles
+          node.style = undefined;
+
+          const { width, height } = measureText(node.text, measureStyle);
           node.width = width;
           node.height = height;
 
@@ -652,5 +674,98 @@ export const useMindmapStore = create<MindmapState>((set) => ({
         applyLayout(sheet.rootId, sheet.nodes, sheet.layout || "logic");
       },
       { recordHistory: true },
+    ),
+
+  navigateNode: (direction) =>
+    updateData(
+      set,
+      (draft) => {
+        const sheet = getActiveSheet(draft);
+        if (!sheet || !sheet.editorState.selectedId) return;
+
+        const currentId = sheet.editorState.selectedId;
+        const node = sheet.nodes[currentId];
+        if (!node) return;
+
+        const layout = sheet.layout || "logic";
+        let nextId: string | null = null;
+
+        // Helpers
+        const getSibling = (offset: number) => {
+          if (node.isRoot || !node.parentId) return null;
+          const parent = sheet.nodes[node.parentId];
+          if (!parent) return null;
+          const index = parent.children.indexOf(currentId);
+          if (index === -1) return null;
+          const newIndex = index + offset;
+          if (newIndex >= 0 && newIndex < parent.children.length) {
+            return parent.children[newIndex];
+          }
+          return null;
+        };
+
+        const getChild = () => {
+          if (node.children.length === 0) return null;
+          // Select middle child for "visual center" feel
+          const mid = Math.floor(node.children.length / 2);
+          return node.children[mid];
+        };
+
+        const getParent = () => node.parentId || null;
+
+        if (layout === "logic") {
+          // Logic Chart: Left=Parent, Right=Child, Up/Down=Siblings
+          if (direction === "left") nextId = getParent();
+          else if (direction === "right") nextId = getChild();
+          else if (direction === "up") nextId = getSibling(-1);
+          else if (direction === "down") nextId = getSibling(1);
+        } else if (layout === "orgChart") {
+          // Org Chart: Up=Parent, Down=Child, Left/Right=Siblings
+          if (direction === "up") nextId = getParent();
+          else if (direction === "down") nextId = getChild();
+          else if (direction === "left") nextId = getSibling(-1);
+          else if (direction === "right") nextId = getSibling(1);
+        } else if (layout === "mindmap") {
+          // Mindmap: Radial
+          const root = sheet.nodes[sheet.rootId];
+          const isRightSide = node.x >= root.x;
+
+          if (node.isRoot) {
+            // Root special case
+            if (direction === "right") {
+              // Find first child with x > root.x
+              nextId =
+                node.children.find((id) => sheet.nodes[id]?.x > root.x) ||
+                node.children[0];
+            } else if (direction === "left") {
+              // Find first child with x < root.x
+              nextId =
+                node.children.find((id) => sheet.nodes[id]?.x < root.x) ||
+                node.children[0];
+            }
+            // Up/Down on root? Maybe cycle? Let's ignore for now or treat as siblings (none)
+          } else {
+            // Non-root nodes
+            if (isRightSide) {
+              // Right side acts like Logic Chart
+              if (direction === "left") nextId = getParent();
+              else if (direction === "right") nextId = getChild();
+              else if (direction === "up") nextId = getSibling(-1);
+              else if (direction === "down") nextId = getSibling(1);
+            } else {
+              // Left side mirrors Logic Chart
+              if (direction === "right") nextId = getParent();
+              else if (direction === "left") nextId = getChild();
+              else if (direction === "up") nextId = getSibling(-1);
+              else if (direction === "down") nextId = getSibling(1);
+            }
+          }
+        }
+
+        if (nextId) {
+          sheet.editorState.selectedId = nextId;
+        }
+      },
+      { recordHistory: false },
     ),
 }));

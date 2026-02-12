@@ -1,6 +1,7 @@
 import React from "react";
-import { MindmapNode, LayoutType } from "../../../shared/types";
+import { MindmapNode, LayoutType, ThemeConfig } from "../../../shared/types";
 import NodeComponent from "./NodeComponent";
+import { getLinkPath, getBranchColor } from "../utils/renderUtils";
 
 interface ViewportState {
   width: number;
@@ -14,6 +15,7 @@ export interface RenderStyleConfig {
   lineColor?: string;
   nodeBg?: string;
   nodeText?: string;
+  borderColor?: string;
   // Add more as needed
 }
 
@@ -24,6 +26,7 @@ interface MindmapRendererProps {
   culling?: boolean;
   viewport?: ViewportState;
   styleConfig?: RenderStyleConfig;
+  theme?: ThemeConfig;
   onNodeDragStart?: (e: React.MouseEvent, nodeId: string) => void;
   dropTargetId?: string | null;
 }
@@ -35,6 +38,7 @@ const MindmapRenderer: React.FC<MindmapRendererProps> = ({
   culling = true,
   viewport,
   styleConfig,
+  theme,
   onNodeDragStart,
   dropTargetId,
 }) => {
@@ -70,12 +74,67 @@ const MindmapRenderer: React.FC<MindmapRendererProps> = ({
     );
   };
 
-  const renderNodesRecursive = (nodeId: string): JSX.Element[] => {
+  const renderNodesRecursive = (
+    nodeId: string,
+    indexInParent: number = 0,
+    inheritedColor?: string,
+  ): JSX.Element[] => {
     const node = nodes[nodeId];
     if (!node) return [];
 
-    const childElements = node.children.flatMap((childId) =>
-      renderNodesRecursive(childId),
+    // Calculate Branch Color
+    let myColor = inheritedColor;
+    if (theme && !node.isRoot) {
+      if (node.parentId === rootId) {
+        // First level child -> Start of a branch
+        myColor = getBranchColor(node, indexInParent, theme);
+      }
+      // Else inherit
+    }
+
+
+
+      // Determine theme default style for this node level
+    let themeDefaultStyle: Partial<MindmapNode["style"]> | undefined;
+    if (theme) {
+      if (nodeId === rootId) {
+        themeDefaultStyle = theme.rootStyle;
+      } else if (node.parentId === rootId) {
+        themeDefaultStyle = theme.primaryStyle;
+      } else {
+        themeDefaultStyle = theme.secondaryStyle;
+      }
+    }
+
+    // Prepare effective node with style merging
+    // Order: Theme Default < Node Specific Overrides
+    // We create a new style object to avoid mutating the original node
+    const effectiveStyle = {
+      ...themeDefaultStyle,
+      ...node.style,
+    };
+
+    // Apply branch color to border if it exists and node doesn't have specific border override
+    if (myColor && !node.style?.borderColor) {
+      effectiveStyle.borderColor = myColor;
+    }
+    
+    // Construct the effective node to pass to NodeComponent
+    const effectiveNode = {
+      ...node,
+      style: effectiveStyle,
+    };
+
+    // Merge styleConfig with branch color
+    // We still keep this for backward compatibility or if NodeComponent uses styleConfig for something else
+    const mergedStyleConfig: RenderStyleConfig = {
+      ...styleConfig,
+      borderColor: myColor || styleConfig?.borderColor,
+      lineColor: myColor || styleConfig?.lineColor,
+    };
+
+    const childElements = node.children.flatMap((childId, idx) =>
+      renderNodesRecursive(childId, idx, myColor),
     );
 
     const visible = isNodeVisible(node);
@@ -85,8 +144,8 @@ const MindmapRenderer: React.FC<MindmapRendererProps> = ({
         <NodeComponent
           key={nodeId}
           nodeId={nodeId}
-          node={node}
-          styleConfig={styleConfig}
+          node={effectiveNode}
+          styleConfig={mergedStyleConfig}
           onNodeDragStart={onNodeDragStart}
           isDropTarget={dropTargetId === nodeId}
         />,
@@ -97,7 +156,10 @@ const MindmapRenderer: React.FC<MindmapRendererProps> = ({
     }
   };
 
-  const renderConnections = (nodeId: string) => {
+  const renderConnections = (
+    nodeId: string,
+    inheritedColor?: string,
+  ): React.ReactNode => {
     const node = nodes[nodeId];
     if (!node) return null;
 
@@ -105,105 +167,78 @@ const MindmapRenderer: React.FC<MindmapRendererProps> = ({
 
     return (
       <React.Fragment key={`conn-${nodeId}`}>
-        {node.children.map((childId) => {
+        {node.children.map((childId, index) => {
           const child = nodes[childId];
           if (!child) return null;
 
           const childVisible = isNodeVisible(child);
 
           // Optimization: Cull connection if both start and end nodes are not visible
-          if (!parentVisible && !childVisible) return null;
-
-          let startX, startY, endX, endY;
-          let cp1X, cp1Y, cp2X, cp2Y;
-
-          if (layout === "orgChart") {
-            // Top to Bottom
-            startX = node.x + node.width / 2;
-            startY = node.y + node.height;
-            endX = child.x + child.width / 2;
-            endY = child.y;
-
-            const midY = (startY + endY) / 2;
-            cp1X = startX;
-            cp1Y = midY;
-            cp2X = endX;
-            cp2Y = midY;
-          } else if (layout === "mindmap" && child.x < node.x) {
-            // Left side of Mindmap
-            startX = node.x;
-            startY = node.y + node.height / 2;
-            endX = child.x + child.width;
-            endY = child.y + child.height / 2;
-
-            const midX = (startX + endX) / 2;
-            cp1X = midX;
-            cp1Y = startY;
-            cp2X = midX;
-            cp2Y = endY;
-          } else {
-            // Logic Chart & Right side of Mindmap (Left to Right)
-            startX = node.x + node.width;
-            startY = node.y + node.height / 2;
-            endX = child.x;
-            endY = child.y + child.height / 2;
-
-            const midX = (startX + endX) / 2;
-            cp1X = midX;
-            cp1Y = startY;
-            cp2X = midX;
-            cp2Y = endY;
-          }
-
-          let d = "";
-          const lineStyle = node.style?.lineStyle || "bezier";
-
-          switch (lineStyle) {
-            case "straight":
-              d = `M ${startX} ${startY} L ${endX} ${endY}`;
-              break;
-            case "step":
-              if (layout === "orgChart") {
-                d = `M ${startX} ${startY} L ${startX} ${(startY + endY) / 2} L ${endX} ${(startY + endY) / 2} L ${endX} ${endY}`;
-              } else {
-                d = `M ${startX} ${startY} L ${(startX + endX) / 2} ${startY} L ${(startX + endX) / 2} ${endY} L ${endX} ${endY}`;
+          if (!parentVisible && !childVisible) {
+            // Even if culled, we must recurse to render grandchildren connections
+            // But we need to know the color.
+            let childColor = inheritedColor;
+            if (theme) {
+              if (node.isRoot) {
+                childColor = getBranchColor(child, index, theme);
               }
-              break;
-            case "bezier":
-            default:
-              d = `M ${startX} ${startY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${endX} ${endY}`;
-              break;
+            }
+            return renderConnections(childId, childColor);
           }
+
+          // Calculate color for this link
+          let linkColor = inheritedColor;
+          if (theme) {
+            if (node.isRoot) {
+              linkColor = getBranchColor(child, index, theme);
+            }
+          }
+          // If no theme/rainbow, use default or styleConfig
+          const finalColor =
+            linkColor ||
+            styleConfig?.lineColor ||
+            node.style?.borderColor || // Fallback to node border
+            (theme ? theme.primaryStyle.borderColor : "#ccc");
+
+          const d = getLinkPath(
+            node,
+            child,
+            node.style?.lineStyle || theme?.lineStyle || "bezier",
+            layout,
+          );
 
           return (
-            <path
-              key={`${node.id}-${child.id}`}
-              d={d}
-              className={
-                !styleConfig?.lineColor
-                  ? "stroke-gray-300 dark:stroke-zinc-600 transition-colors"
-                  : undefined
-              }
-              style={
-                styleConfig?.lineColor
-                  ? { stroke: styleConfig.lineColor }
-                  : undefined
-              }
-              strokeWidth="2"
-              fill="none"
-            />
+            <React.Fragment key={`${node.id}-${child.id}`}>
+              <path
+                d={d}
+                className={
+                  !finalColor
+                    ? "stroke-gray-300 dark:stroke-zinc-600 transition-colors"
+                    : undefined
+                }
+                style={
+                  finalColor
+                    ? { stroke: finalColor }
+                    : undefined
+                }
+                strokeWidth="2"
+                fill="none"
+              />
+              {renderConnections(childId, linkColor)}
+            </React.Fragment>
           );
         })}
-        {node.children.map((childId) => renderConnections(childId))}
       </React.Fragment>
     );
   };
 
   return (
-    <>
+    <g>
+      {/* Connections Layer */}
       {renderConnections(rootId)}
+      {/* Nodes Layer */}
       {renderNodesRecursive(rootId)}
-    </>
+    </g>
   );
 };
 

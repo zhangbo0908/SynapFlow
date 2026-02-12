@@ -1,5 +1,7 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import { useMindmapStore } from "../store/useMindmapStore";
+import { useUIStore } from "../store/useUIStore";
+import { getThemeConfig } from "../utils/themePresets";
 import MindmapRenderer from "./MindmapRenderer";
 
 const CanvasWorkspace: React.FC = () => {
@@ -14,6 +16,33 @@ const CanvasWorkspace: React.FC = () => {
   const undo = useMindmapStore((state) => state.undo);
   const redo = useMindmapStore((state) => state.redo);
   const moveNode = useMindmapStore((state) => state.moveNode);
+  const navigateNode = useMindmapStore((state) => state.navigateNode);
+
+  const themeMode = useUIStore((state) => state.themeMode);
+  const [systemIsDark, setSystemIsDark] = useState(
+    window.matchMedia("(prefers-color-scheme: dark)").matches,
+  );
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = (e: MediaQueryListEvent) => {
+      setSystemIsDark(e.matches);
+    };
+
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
+
+  const isDark =
+    themeMode === "dark" || (themeMode === "system" && systemIsDark);
+
+  const currentThemeConfig = useMemo(() => {
+    if (!activeSheet) return getThemeConfig("business", "light");
+    return getThemeConfig(
+      activeSheet.theme || "business",
+      isDark ? "dark" : "light",
+    );
+  }, [activeSheet?.theme, isDark]);
 
   const [isPanning, setIsPanning] = useState(false);
   const [dragState, setDragState] = useState<{
@@ -124,12 +153,28 @@ const CanvasWorkspace: React.FC = () => {
         case "Delete":
           deleteNode(selectedId);
           break;
+        case "ArrowLeft":
+          e.preventDefault();
+          navigateNode("left");
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          navigateNode("right");
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          navigateNode("up");
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          navigateNode("down");
+          break;
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedId, addChildNode, addSiblingNode, deleteNode, undo, redo]);
+  }, [selectedId, addChildNode, addSiblingNode, deleteNode, undo, redo, navigateNode]);
 
   const handleWheel = (e: React.WheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
@@ -289,6 +334,7 @@ const CanvasWorkspace: React.FC = () => {
               y: offset.y,
               zoom: zoom,
             }}
+            theme={currentThemeConfig}
             onNodeDragStart={handleNodeDragStart}
             dropTargetId={dragState.dropTargetId}
           />

@@ -38,7 +38,7 @@ export interface ThemeConfig {
   rootStyle: Partial<NodeStyle>;
   primaryStyle: Partial<NodeStyle>;
   secondaryStyle: Partial<NodeStyle>;
-  lineStyle: "straight" | "bezier" | "step";
+  lineStyle: "straight" | "bezier" | "step" | "hand-drawn";
   backgroundColor: string;
   palette?: string[];
 }

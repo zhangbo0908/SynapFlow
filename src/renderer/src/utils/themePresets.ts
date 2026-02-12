@@ -27,7 +27,7 @@ export const THEME_PRESETS: Record<string, ThemeConfig> = {
     secondaryStyle: {
       backgroundColor: "transparent",
       color: "#34495E",
-      borderWidth: 0,
+      borderWidth: 1,
       fontSize: 14,
       shape: "underline",
     },
@@ -86,7 +86,7 @@ export const THEME_PRESETS: Record<string, ThemeConfig> = {
     secondaryStyle: {
       backgroundColor: "transparent",
       color: "#000000",
-      borderWidth: 0,
+      borderWidth: 1,
       fontSize: 14,
       shape: "underline",
     },
@@ -158,6 +158,35 @@ export const THEME_PRESETS: Record<string, ThemeConfig> = {
       shadowBlur: 3,
     },
   },
+  handDrawn: {
+    name: "手绘草图",
+    backgroundColor: "#fffef0",
+    lineStyle: "hand-drawn",
+    palette: ["#E74C3C", "#3498DB", "#F1C40F", "#2ECC71"],
+    rootStyle: {
+      backgroundColor: "transparent",
+      color: "#333",
+      borderColor: "#333",
+      borderWidth: 2,
+      fontSize: 24,
+      shape: "cloud",
+    },
+    primaryStyle: {
+      backgroundColor: "transparent",
+      color: "#333",
+      borderColor: "#333",
+      borderWidth: 2,
+      fontSize: 18,
+      shape: "ellipse",
+    },
+    secondaryStyle: {
+      backgroundColor: "transparent",
+      color: "#333",
+      borderWidth: 0,
+      fontSize: 14,
+      shape: "underline",
+    },
+  },
 };
 
 export const THEME_PRESETS_DARK: Record<string, ThemeConfig> = {
@@ -187,7 +216,7 @@ export const THEME_PRESETS_DARK: Record<string, ThemeConfig> = {
     secondaryStyle: {
       backgroundColor: "transparent",
       color: "#A4B0BE",
-      borderWidth: 0,
+      borderWidth: 1,
       fontSize: 14,
       shape: "underline",
     },
@@ -246,7 +275,7 @@ export const THEME_PRESETS_DARK: Record<string, ThemeConfig> = {
     secondaryStyle: {
       backgroundColor: "transparent",
       color: "#FFFFFF",
-      borderWidth: 0,
+      borderWidth: 1,
       fontSize: 14,
       shape: "underline",
     },
@@ -316,6 +345,35 @@ export const THEME_PRESETS_DARK: Record<string, ThemeConfig> = {
       shape: "rectangle",
       shadowColor: "#00D2FF",
       shadowBlur: 3,
+    },
+  },
+  handDrawn: {
+    name: "手绘草图 (Dark)",
+    backgroundColor: "#2C3E50", // Dark slate background
+    lineStyle: "hand-drawn",
+    palette: ["#E74C3C", "#3498DB", "#F1C40F", "#2ECC71"],
+    rootStyle: {
+      backgroundColor: "transparent",
+      color: "#ECF0F1", // Light grey text
+      borderColor: "#ECF0F1",
+      borderWidth: 2,
+      fontSize: 24,
+      shape: "cloud",
+    },
+    primaryStyle: {
+      backgroundColor: "transparent",
+      color: "#ECF0F1",
+      borderColor: "#ECF0F1",
+      borderWidth: 2,
+      fontSize: 18,
+      shape: "ellipse",
+    },
+    secondaryStyle: {
+      backgroundColor: "transparent",
+      color: "#ECF0F1",
+      borderWidth: 0,
+      fontSize: 14,
+      shape: "underline",
     },
   },
 };

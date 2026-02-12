@@ -50,8 +50,8 @@ SynapFlow 是一个 **人机协同开发** 的实战范式项目。我们采用�
 
 您可以在 [GitHub Releases](https://github.com/zhangbo0908/SynapFlow/releases) 页面下载最新版本的 macOS 和 Windows 制品。
 
-- **macOS (Apple Silicon)**: [SynapFlow-1.2.0-mac-arm64.zip](https://github.com/zhangbo0908/SynapFlow/releases/download/v1.2.0/SynapFlow-1.2.0-mac-arm64.zip)
-- **Windows (x64)**: [SynapFlow-1.2.0-win-x64.exe](https://github.com/zhangbo0908/SynapFlow/releases/download/v1.2.0/SynapFlow-1.2.0-win-x64.exe)
+- **macOS (Apple Silicon)**: [SynapFlow-1.3.0-mac-arm64.zip](https://github.com/zhangbo0908/SynapFlow/releases/download/v1.3.0/SynapFlow-1.3.0-mac-arm64.zip)
+- **Windows (x64)**: [SynapFlow-1.3.0-win-x64.exe](https://github.com/zhangbo0908/SynapFlow/releases/download/v1.3.0/SynapFlow-1.3.0-win-x64.exe)
 
 > **注意**：Windows 版本目前仅完成了打包编译，尚未经过深度测试。建议感兴趣的爱好者可以自行下载或通过源码编译调试。
 
@@ -88,7 +88,7 @@ sudo xattr -rd com.apple.quarantine /Applications/SynapFlow.app
 
 ## 🗓 开发进度
 
-**当前版本**：v1.2.0（Performance Update）
+**当前版本**：v1.3.0（Visual Enhancement Update）
 
 - [x] **基础架构**：Electron + React + TypeScript 环境搭建
 - [x] **核心编辑**：节点增删改、快捷键系统、Undo/Redo (20步)
@@ -101,7 +101,11 @@ sudo xattr -rd com.apple.quarantine /Applications/SynapFlow.app
 - [x] **性能飞跃 (v1.2.0)**：
   - [x] **增量历史记录**：引入 Immer Patches，内存占用降低 90%
   - [x] **渲染优化**：智能视口剔除 (Viewport Culling) 与组件级记忆化 (React.memo)
-- [ ] **v1.3.0 规划**：
+- [x] **视觉增强 (v1.3.0)**：
+  - [x] **XMind 视觉还原**：特殊形状支持、1:1 连线样式复刻、分支颜色继承
+  - [x] **暗黑模式优化**：全主题深色适配、动态主题切换修复
+  - [x] **手绘风格优化**：基于三次贝塞尔曲线的自然手绘连线
+- [ ] **v1.4.0 规划**：
   - [ ] **体验增强**：全局搜索、节点图标/标签支持、自动更新机制
 
 ## ⚠️ 免责声明

@@ -93,6 +93,8 @@ const NodeComponent: React.FC<NodeComponentProps> = React.memo(
         if (cssVar === "--color-bg-node") return styleConfig.nodeBg || fallback;
         if (cssVar === "--color-text-node")
           return styleConfig.nodeText || fallback;
+        if (cssVar === "--color-border-node")
+          return styleConfig.borderColor || fallback;
       }
       return `var(${cssVar})`;
     };
@@ -244,6 +246,7 @@ const NodeComponent: React.FC<NodeComponentProps> = React.memo(
         className={clsx(
           !node.isRoot && "cursor-grab active:cursor-grabbing",
           node.isRoot && "cursor-default",
+          "transition-transform duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1.0)]",
         )}
       >
         {renderShape()}

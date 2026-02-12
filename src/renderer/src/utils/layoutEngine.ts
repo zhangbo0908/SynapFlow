@@ -3,6 +3,12 @@ import { MindmapNode, LayoutType } from "../../../shared/types";
 const H_GAP = 50;
 const V_GAP = 20;
 
+const getHGap = (depth: number): number => {
+  if (depth === 0) return 64; // Root -> L1
+  if (depth === 1) return 40; // L1 -> L2
+  return 32; // L2+
+};
+
 type HeightCache = Map<string, number>;
 type WidthCache = Map<string, number>;
 
@@ -70,6 +76,7 @@ const layoutLogicNode = (
   x: number,
   y: number,
   heightCache: HeightCache,
+  depth: number = 0,
 ) => {
   const node = nodes[nodeId];
   if (!node) return;
@@ -81,13 +88,13 @@ const layoutLogicNode = (
 
   const childrenTotalHeight = heightCache.get(nodeId)!;
   let currentY = y + node.height / 2 - childrenTotalHeight / 2;
-  const childX = x + node.width + H_GAP;
+  const childX = x + node.width + getHGap(depth);
 
   node.children.forEach((childId) => {
     const childHeight = heightCache.get(childId)!;
     const childNode = nodes[childId];
     const childY = currentY + (childHeight - childNode.height) / 2;
-    layoutLogicNode(childId, nodes, childX, childY, heightCache);
+    layoutLogicNode(childId, nodes, childX, childY, heightCache, depth + 1);
     currentY += childHeight + V_GAP;
   });
 };
@@ -101,6 +108,7 @@ const layoutMindmapNode = (
   y: number,
   heightCache: HeightCache,
   direction: "left" | "right",
+  depth: number,
 ) => {
   const node = nodes[nodeId];
   if (!node) return;
@@ -120,13 +128,21 @@ const layoutMindmapNode = (
 
     let childX;
     if (direction === "right") {
-      childX = x + node.width + H_GAP;
+      childX = x + node.width + getHGap(depth);
     } else {
-      childX = x - H_GAP - childNode.width;
+      childX = x - getHGap(depth) - childNode.width;
     }
 
     // Recursively layout children in the SAME direction
-    layoutMindmapNode(childId, nodes, childX, childY, heightCache, direction);
+    layoutMindmapNode(
+      childId,
+      nodes,
+      childX,
+      childY,
+      heightCache,
+      direction,
+      depth + 1,
+    );
     currentY += childHeight + V_GAP;
   });
 };
@@ -177,13 +193,13 @@ const layoutMindmapRoot = (
 
   // Layout Right Side
   let currentY = root.y + root.height / 2 - rightHeight / 2;
-  const rightX = root.x + root.width + H_GAP;
+  const rightX = root.x + root.width + getHGap(0);
 
   rightChildren.forEach((childId) => {
     const childHeight = heightCache.get(childId)!;
     const childNode = nodes[childId];
     const childY = currentY + (childHeight - childNode.height) / 2;
-    layoutMindmapNode(childId, nodes, rightX, childY, heightCache, "right");
+    layoutMindmapNode(childId, nodes, rightX, childY, heightCache, "right", 1);
     currentY += childHeight + V_GAP;
   });
 
@@ -196,8 +212,8 @@ const layoutMindmapRoot = (
     const childHeight = heightCache.get(childId)!;
     const childNode = nodes[childId];
     const childY = currentY + (childHeight - childNode.height) / 2;
-    const leftX = root.x - H_GAP - childNode.width;
-    layoutMindmapNode(childId, nodes, leftX, childY, heightCache, "left");
+    const leftX = root.x - getHGap(0) - childNode.width;
+    layoutMindmapNode(childId, nodes, leftX, childY, heightCache, "left", 1);
     currentY += childHeight + V_GAP;
   });
 };
@@ -294,7 +310,7 @@ export const applyLayout = (
 
   if (type === "logic") {
     calculateSubtreeHeight(rootId, nodes, heightCache);
-    layoutLogicNode(rootId, nodes, 0, 0, heightCache);
+    layoutLogicNode(rootId, nodes, 0, 0, heightCache, 0);
   } else if (type === "mindmap") {
     calculateSubtreeHeight(rootId, nodes, heightCache);
     layoutMindmapRoot(rootId, nodes, heightCache);
