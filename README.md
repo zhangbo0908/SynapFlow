@@ -1,8 +1,8 @@
 # SynapFlow
 
 [![GitHub release](https://img.shields.io/github/v/release/zhangbo0908/SynapFlow?include_prereleases)](https://github.com/zhangbo0908/SynapFlow/releases)
-[![Download macOS](https://img.shields.io/badge/download-macOS-blue?logo=apple)](https://github.com/zhangbo0908/SynapFlow/releases/latest)
-[![Download Windows](https://img.shields.io/badge/download-Windows-blue?logo=windows)](https://github.com/zhangbo0908/SynapFlow/releases/latest)
+[![Download macOS](https://img.shields.io/badge/download-macOS-blue?logo=apple)](https://github.com/zhangbo0908/SynapFlow/releases/download/v1.4.0/SynapFlow-1.4.0-arm64-mac.zip)
+[![Download Windows](https://img.shields.io/badge/download-Windows-blue?logo=windows)](https://github.com/zhangbo0908/SynapFlow/releases/download/v1.4.0/SynapFlow-Setup-1.4.0.exe)
 
 SynapFlow 是一个专注于隐私、高性能的本地思维导图应用。它采用现代 Web 技术构建，旨在提供流畅的思维梳理体验，完全兼容 XMind 文件格式。
 
