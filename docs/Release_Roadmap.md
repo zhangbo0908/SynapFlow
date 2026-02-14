@@ -83,11 +83,12 @@
 - [x] [Tech] **渲染优化**：实现视口剔除 (Viewport Culling) 与组件级记忆化 (React.memo)，保障千级节点流畅度。
 - [x] [Release] macOS (.zip) 与 Windows (.exe) 安装包构建发布。
 
-### v1.3.0 - 视觉增强与架构加固 (Visual & Stability)
+### v1.3.1 - 视觉增强与架构加固 (Visual & Stability)
 - [x] [Feature] **UI 交互重构**：采用 Teal+Orange 专业配色，Flat Design 2.0 视觉风格。
 - [x] [Feature] **画布遮挡修复**：彻底解决标题栏遮挡画布交互的布局冲突问题。
 - [x] [Tech] **TDD 深度对齐**：全量重构测试用例，123 项测试 100% 通过，确保核心逻辑稳健。
 - [x] [UX] **窗口拖拽优化**：修复 macOS/Windows 原生标题栏拖拽区域失效问题。
+- [x] [Release] **正式发布**：推送至 GitHub Releases 并生成多端安装包。
 
 ### v1.4.0 规划 (Planned)
 - [ ] [Feature] **体验增强**：全局搜索、节点图标/标签支持、自动更新机制。
