@@ -24,6 +24,31 @@ try {
         ipcRenderer.invoke("user:updatePreferences", prefs),
     },
   });
+
+  contextBridge.exposeInMainWorld("electronAPI", {
+    checkForUpdate: () => ipcRenderer.invoke("update:check"),
+    downloadUpdate: () => ipcRenderer.invoke("update:download"),
+    installUpdate: () => ipcRenderer.invoke("update:install"),
+    onUpdateEvent: (callback: (event: string, data?: any) => void) => {
+      const handlers: Record<string, (...args: any[]) => void> = {
+        "update:checking": () => callback("checking"),
+        "update:available": (_, data) => callback("available", data),
+        "update:progress": (_, data) => callback("downloading", data),
+        "update:downloaded": () => callback("downloaded"),
+        "update:error": (_, data) => callback("error", data),
+      };
+
+      Object.entries(handlers).forEach(([channel, handler]) => {
+        ipcRenderer.on(channel, handler);
+      });
+
+      return () => {
+        Object.entries(handlers).forEach(([channel, handler]) => {
+          ipcRenderer.removeListener(channel, handler);
+        });
+      };
+    },
+  });
 } catch (error) {
   console.error(error);
 }

@@ -228,6 +228,11 @@ const CanvasWorkspace: React.FC = () => {
   );
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Ensure canvas container gets focus when clicked
+    if (containerRef.current && !containerRef.current.contains(document.activeElement)) {
+      containerRef.current.focus();
+    }
+
     // Check if target is background to allow panning
     // Use closest to check if we are clicking on a node or link
     const target = e.target as Element;

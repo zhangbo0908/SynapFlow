@@ -47,6 +47,12 @@ vi.mock("../../src/renderer/src/components/ExportDropdown", () => ({
 vi.mock("../../src/renderer/src/components/WelcomeScreen", () => ({
   default: () => <div data-testid="welcome-screen" />,
 }));
+vi.mock("../../src/renderer/src/components/SearchBar", () => ({
+  default: () => <div data-testid="search-bar" />,
+}));
+vi.mock("../../src/renderer/src/components/UpdateModal", () => ({
+  default: () => null,
+}));
 
 // Mock API
 window.api = {
@@ -60,6 +66,14 @@ window.api = {
     getPreferences: vi.fn().mockResolvedValue({}),
     setPreferences: vi.fn(),
   },
+} as any;
+
+// Mock electronAPI
+window.electronAPI = {
+  checkForUpdate: vi.fn(),
+  downloadUpdate: vi.fn(),
+  installUpdate: vi.fn(),
+  onUpdateEvent: vi.fn(() => () => {}),
 } as any;
 
 describe("App Theme Logic", () => {
@@ -93,8 +107,25 @@ describe("App Theme Logic", () => {
       selector({
         themeMode: "system",
         viewMode: "editor", // Ensure we render the toolbar
+        isSidebarOpen: true,
+        searchQuery: "",
+        searchResults: [],
+        searchIndex: -1,
+        updateModalVisible: false,
+        updateStatus: "idle",
+        updateVersion: "",
+        updateProgress: 0,
         setThemeMode,
         setViewMode,
+        toggleSidebar: vi.fn(),
+        setSearchQuery: vi.fn(),
+        setSearchResults: vi.fn(),
+        setSearchIndex: vi.fn(),
+        clearSearch: vi.fn(),
+        setUpdateModalVisible: vi.fn(),
+        setUpdateStatus: vi.fn(),
+        setUpdateVersion: vi.fn(),
+        setUpdateProgress: vi.fn(),
       }),
     );
   });

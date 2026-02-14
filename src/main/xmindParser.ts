@@ -1,6 +1,29 @@
 import JSZip from "jszip";
-import { LocalMindmap, MindmapNode, Sheet } from "../shared/types";
+import { LocalMindmap, MindmapNode, Sheet, NodeStyle } from "../shared/types";
 import { v4 as uuidv4 } from "uuid";
+
+// XMind Shape to SynapFlow Shape mapping
+const XMIND_SHAPE_MAP: Record<string, NodeStyle["shape"]> = {
+  "rounded-rectangle": "rounded",
+  "rectangle": "rectangle",
+  "ellipse": "ellipse",
+  "oval": "ellipse",
+  "diamond": "diamond",
+  "rhombus": "diamond",
+  "cloud": "cloud",
+  "hexagon": "hexagon",
+  "capsule": "capsule",
+  "underline": "underline",
+};
+
+// XMind Line Style to SynapFlow Line Style mapping
+const XMIND_LINE_STYLE_MAP: Record<string, NodeStyle["lineStyle"]> = {
+  "straight": "straight",
+  "curve": "bezier",
+  "bezier": "bezier",
+  "polyline": "step",
+  "step": "step",
+};
 
 interface XMindNode {
   id: string;
@@ -14,6 +37,11 @@ interface XMindNode {
       "border-line-color"?: string;
       "fo:color"?: string;
       "fo:font-size"?: string;
+      "border-line-width"?: string;
+      "border-line-style"?: string;
+      "border-radius"?: string;
+      "shape"?: string;
+      "line-style"?: string;
     };
   };
 }
@@ -33,16 +61,46 @@ const convertNode = (
 ): string => {
   const nodeId = xNode.id || uuidv4();
 
+  // Map XMind shape to SynapFlow shape
+  const xmindShape = xNode.style?.properties?.["shape"];
+  const shape = xmindShape ? XMIND_SHAPE_MAP[xmindShape] : undefined;
+
+  // Map XMind line style to SynapFlow line style
+  const xmindLineStyle = xNode.style?.properties?.["line-style"];
+  const lineStyle = xmindLineStyle ? XMIND_LINE_STYLE_MAP[xmindLineStyle] : undefined;
+
+  // Map border style
+  const xmindBorderStyle = xNode.style?.properties?.["border-line-style"];
+  let borderStyle: NodeStyle["borderStyle"];
+  if (xmindBorderStyle === "dashed") {
+    borderStyle = "dashed";
+  } else if (xmindBorderStyle === "dotted") {
+    borderStyle = "dotted";
+  } else if (xmindBorderStyle === "none") {
+    borderStyle = "none";
+  } else {
+    borderStyle = "solid";
+  }
+
   // Extract style if available
   // XMind 8 (XML) and Zen (JSON) store styles differently.
   // This is a simplified extraction for JSON format mainly.
-  const style = {
+  const style: NodeStyle = {
     backgroundColor: xNode.style?.properties?.["svg:fill"],
     borderColor: xNode.style?.properties?.["border-line-color"],
     color: xNode.style?.properties?.["fo:color"],
     fontSize: xNode.style?.properties?.["fo:font-size"]
       ? parseInt(String(xNode.style.properties["fo:font-size"]))
       : undefined,
+    borderWidth: xNode.style?.properties?.["border-line-width"]
+      ? parseFloat(String(xNode.style.properties["border-line-width"]))
+      : undefined,
+    borderRadius: xNode.style?.properties?.["border-radius"]
+      ? parseFloat(String(xNode.style.properties["border-radius"]))
+      : undefined,
+    shape,
+    lineStyle,
+    borderStyle,
   };
 
   const newNode: MindmapNode = {
@@ -134,6 +192,25 @@ export async function parseXMindFile(
 
 // --- Export Logic ---
 
+// SynapFlow Shape to XMind Shape mapping
+const SYNAPFLOW_SHAPE_MAP: Record<string, string> = {
+  "rounded": "rounded-rectangle",
+  "rectangle": "rectangle",
+  "ellipse": "ellipse",
+  "diamond": "diamond",
+  "cloud": "cloud",
+  "hexagon": "hexagon",
+  "capsule": "capsule",
+  "underline": "underline",
+};
+
+// SynapFlow Line Style to XMind Line Style mapping
+const SYNAPFLOW_LINE_STYLE_MAP: Record<string, string> = {
+  "straight": "straight",
+  "bezier": "curve",
+  "step": "polyline",
+};
+
 const buildXMindTree = (
   nodeId: string,
   nodes: Record<string, MindmapNode>,
@@ -166,6 +243,16 @@ const buildXMindTree = (
     if (node.style.color) props["fo:color"] = node.style.color;
     if (node.style.fontSize)
       props["fo:font-size"] = String(node.style.fontSize); // pt or px? XMind usually uses just number or pt
+    if (node.style.borderWidth)
+      props["border-line-width"] = String(node.style.borderWidth);
+    if (node.style.borderRadius)
+      props["border-radius"] = String(node.style.borderRadius);
+    if (node.style.borderStyle && node.style.borderStyle !== "solid")
+      props["border-line-style"] = node.style.borderStyle;
+    if (node.style.shape)
+      props["shape"] = SYNAPFLOW_SHAPE_MAP[node.style.shape] || node.style.shape;
+    if (node.style.lineStyle)
+      props["line-style"] = SYNAPFLOW_LINE_STYLE_MAP[node.style.lineStyle] || node.style.lineStyle;
 
     xNode.style!.properties = props;
   }

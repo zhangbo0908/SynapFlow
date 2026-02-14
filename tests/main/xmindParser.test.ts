@@ -92,4 +92,106 @@ describe("xmindParser", () => {
     expect(result!.activeSheetId).toBe("sheet-1");
     expect(result!.rootId).toBe("root-1");
   });
+
+  it("should parse node shapes correctly", async () => {
+    const mockContentJson = JSON.stringify([
+      {
+        id: "sheet-1",
+        title: "Sheet 1",
+        rootTopic: {
+          id: "root-1",
+          title: "Root 1",
+          style: {
+            properties: {
+              shape: "diamond",
+            },
+          },
+          children: {
+            attached: [
+              {
+                id: "child-1",
+                title: "Child 1",
+                style: {
+                  properties: {
+                    shape: "cloud",
+                  },
+                },
+              },
+              {
+                id: "child-2",
+                title: "Child 2",
+                style: {
+                  properties: {
+                    shape: "ellipse",
+                  },
+                },
+              },
+            ],
+          },
+        },
+      },
+    ]);
+
+    const mockZip = {
+      file: vi.fn((filename) => {
+        if (filename === "content.json") {
+          return {
+            async: vi.fn().mockResolvedValue(mockContentJson),
+          };
+        }
+        return null;
+      }),
+    };
+
+    // @ts-ignore
+    JSZip.loadAsync.mockResolvedValue(mockZip);
+
+    const result = await parseXMindFile(Buffer.from(""));
+
+    expect(result).not.toBeNull();
+    expect(result!.sheets[0].nodes["root-1"].style?.shape).toBe("diamond");
+    expect(result!.sheets[0].nodes["child-1"].style?.shape).toBe("cloud");
+    expect(result!.sheets[0].nodes["child-2"].style?.shape).toBe("ellipse");
+  });
+
+  it("should parse border styles correctly", async () => {
+    const mockContentJson = JSON.stringify([
+      {
+        id: "sheet-1",
+        title: "Sheet 1",
+        rootTopic: {
+          id: "root-1",
+          title: "Root 1",
+          style: {
+            properties: {
+              "border-line-style": "dashed",
+              "border-line-width": "3",
+              "border-radius": "12",
+            },
+          },
+        },
+      },
+    ]);
+
+    const mockZip = {
+      file: vi.fn((filename) => {
+        if (filename === "content.json") {
+          return {
+            async: vi.fn().mockResolvedValue(mockContentJson),
+          };
+        }
+        return null;
+      }),
+    };
+
+    // @ts-ignore
+    JSZip.loadAsync.mockResolvedValue(mockZip);
+
+    const result = await parseXMindFile(Buffer.from(""));
+
+    expect(result).not.toBeNull();
+    expect(result!.sheets[0].nodes["root-1"].style?.borderStyle).toBe("dashed");
+    expect(result!.sheets[0].nodes["root-1"].style?.borderWidth).toBe(3);
+    expect(result!.sheets[0].nodes["root-1"].style?.borderRadius).toBe(12);
+  });
 });

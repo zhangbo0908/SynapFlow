@@ -1,6 +1,7 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
+import { autoUpdater } from "electron-updater";
 import {
   saveMindmap,
   openMindmap,
@@ -17,9 +18,51 @@ import { UserDataManager } from "./userData";
 app.commandLine.appendSwitch("disable-gpu");
 app.commandLine.appendSwitch("disable-software-rasterizer");
 
+// 全局窗口引用
+let mainWindow: BrowserWindow | null = null;
+
+// 初始化自动更新
+function initAutoUpdater(): void {
+  if (!is.dev) {
+    autoUpdater.autoDownload = false;
+    autoUpdater.autoInstallOnAppQuit = true;
+
+    autoUpdater.on("checking-for-update", () => {
+      sendToRenderer("update:checking");
+    });
+
+    autoUpdater.on("update-available", (info) => {
+      sendToRenderer("update:available", info);
+    });
+
+    autoUpdater.on("update-not-available", () => {
+      sendToRenderer("update:not-available");
+    });
+
+    autoUpdater.on("download-progress", (progressObj) => {
+      sendToRenderer("update:progress", progressObj);
+    });
+
+    autoUpdater.on("update-downloaded", (info) => {
+      sendToRenderer("update:downloaded", info);
+    });
+
+    autoUpdater.on("error", (error) => {
+      sendToRenderer("update:error", error.message);
+    });
+  }
+}
+
+// 向渲染进程发送消息
+function sendToRenderer(channel: string, ...args: any[]): void {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send(channel, ...args);
+  }
+}
+
 function createWindow(): void {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
@@ -67,8 +110,44 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window);
   });
 
+  // 初始化自动更新
+  initAutoUpdater();
+
   // IPC Handlers
   const userDataManager = new UserDataManager();
+
+  // 自动更新相关 IPC
+  ipcMain.handle("update:check", async () => {
+    if (is.dev) {
+      return { success: false, message: "开发模式下不检查更新" };
+    }
+    try {
+      await autoUpdater.checkForUpdates();
+      return { success: true };
+    } catch (error) {
+      return { success: false, message: error instanceof Error ? error.message : "检查更新失败" };
+    }
+  });
+
+  ipcMain.handle("update:download", async () => {
+    if (is.dev) {
+      return { success: false, message: "开发模式下不下载更新" };
+    }
+    try {
+      await autoUpdater.downloadUpdate();
+      return { success: true };
+    } catch (error) {
+      return { success: false, message: error instanceof Error ? error.message : "下载更新失败" };
+    }
+  });
+
+  ipcMain.handle("update:install", () => {
+    if (is.dev) {
+      return { success: false, message: "开发模式下不安装更新" };
+    }
+    autoUpdater.quitAndInstall();
+    return { success: true };
+  });
 
   ipcMain.handle("app:getRecentFiles", () => {
     return userDataManager.getRecentFiles();

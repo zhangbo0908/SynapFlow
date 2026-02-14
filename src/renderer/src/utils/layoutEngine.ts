@@ -1,7 +1,7 @@
 import { MindmapNode, LayoutType } from "../../../shared/types";
 
 const H_GAP = 50;
-const V_GAP = 20;
+const MIN_V_GAP = 16; // 同级节点最小间距
 
 const getHGap = (depth: number): number => {
   if (depth === 0) return 64; // Root -> L1
@@ -32,7 +32,7 @@ const calculateSubtreeHeight = (
   node.children.forEach((childId, index) => {
     childrenHeight += calculateSubtreeHeight(childId, nodes, heightCache);
     if (index < node.children.length - 1) {
-      childrenHeight += V_GAP;
+      childrenHeight += MIN_V_GAP;
     }
   });
 
@@ -95,7 +95,7 @@ const layoutLogicNode = (
     const childNode = nodes[childId];
     const childY = currentY + (childHeight - childNode.height) / 2;
     layoutLogicNode(childId, nodes, childX, childY, heightCache, depth + 1);
-    currentY += childHeight + V_GAP;
+    currentY += childHeight + MIN_V_GAP;
   });
 };
 
@@ -143,7 +143,7 @@ const layoutMindmapNode = (
       direction,
       depth + 1,
     );
-    currentY += childHeight + V_GAP;
+    currentY += childHeight + MIN_V_GAP;
   });
 };
 
@@ -183,7 +183,7 @@ const layoutMindmapRoot = (
     let h = 0;
     childIds.forEach((id, idx) => {
       h += heightCache.get(id)!;
-      if (idx < childIds.length - 1) h += V_GAP;
+      if (idx < childIds.length - 1) h += MIN_V_GAP;
     });
     return h;
   };
@@ -200,7 +200,7 @@ const layoutMindmapRoot = (
     const childNode = nodes[childId];
     const childY = currentY + (childHeight - childNode.height) / 2;
     layoutMindmapNode(childId, nodes, rightX, childY, heightCache, "right", 1);
-    currentY += childHeight + V_GAP;
+    currentY += childHeight + MIN_V_GAP;
   });
 
   // Layout Left Side
@@ -214,7 +214,7 @@ const layoutMindmapRoot = (
     const childY = currentY + (childHeight - childNode.height) / 2;
     const leftX = root.x - getHGap(0) - childNode.width;
     layoutMindmapNode(childId, nodes, leftX, childY, heightCache, "left", 1);
-    currentY += childHeight + V_GAP;
+    currentY += childHeight + MIN_V_GAP;
   });
 };
 

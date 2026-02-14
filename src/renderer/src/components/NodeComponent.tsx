@@ -16,9 +16,6 @@ interface NodeComponentProps {
 const NodeComponent: React.FC<NodeComponentProps> = React.memo(
   ({ nodeId, node: propNode, styleConfig, onNodeDragStart, isDropTarget }) => {
     const storeNode = useMindmapStore((state) => {
-      // If we have a propNode, we might skip subscription, but hooks rules say we shouldn't conditionalize hooks.
-      // However, we can just return undefined if we don't care, or just always subscribe.
-      // Since this is a lightweight selector, always subscribing is fine.
       const sheet = state.data.sheets?.find(
         (s) => s.id === state.data.activeSheetId,
       );
@@ -38,6 +35,8 @@ const NodeComponent: React.FC<NodeComponentProps> = React.memo(
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
+    const [isPulsing, setIsPulsing] = useState(false);
+    const prevIsSelected = useRef(isSelected);
 
     useEffect(() => {
       if (isEditing && inputRef.current) {
@@ -45,6 +44,15 @@ const NodeComponent: React.FC<NodeComponentProps> = React.memo(
         inputRef.current.select();
       }
     }, [isEditing]);
+
+    useEffect(() => {
+      if (isSelected && !prevIsSelected.current) {
+        setIsPulsing(true);
+        const timer = setTimeout(() => setIsPulsing(false), 200);
+        return () => clearTimeout(timer);
+      }
+      prevIsSelected.current = isSelected;
+    }, [isSelected]);
 
     if (!node) return null;
 
@@ -248,7 +256,16 @@ const NodeComponent: React.FC<NodeComponentProps> = React.memo(
           !node.isRoot && "cursor-grab active:cursor-grabbing",
           node.isRoot && "cursor-default",
           "transition-transform duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1.0)]",
+          isPulsing && "animate-pulse-scale",
         )}
+        style={
+          isPulsing
+            ? {
+                transform: `translate(${node.x}, ${node.y}) scale(1.02)`,
+                transition: "transform 100ms ease-out",
+              }
+            : undefined
+        }
       >
         {renderShape()}
 

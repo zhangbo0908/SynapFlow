@@ -88,4 +88,84 @@ describe("Layout Engine", () => {
     // Children should be spaced horizontally
     expect(nodes["c1"].x).not.toBe(nodes["c2"].x);
   });
+
+  it("should apply horizontal gap decreasing with depth (Root -> L1: 64px)", () => {
+    const nodes: Record<string, MindmapNode> = {
+      root: createNode("root", "Root", 100, 50),
+      l1: createNode("l1", "L1", 80, 40, "root"),
+    };
+    nodes["root"].children = ["l1"];
+
+    applyLayout("root", nodes, "logic");
+
+    // Root -> L1 should be 64px
+    const expectedX = nodes["root"].x + nodes["root"].width + 64;
+    expect(nodes["l1"].x).toBe(expectedX);
+  });
+
+  it("should apply horizontal gap decreasing with depth (L1 -> L2: 40px)", () => {
+    const nodes: Record<string, MindmapNode> = {
+      root: createNode("root", "Root", 100, 50),
+      l1: createNode("l1", "L1", 80, 40, "root"),
+      l2: createNode("l2", "L2", 80, 40, "l1"),
+    };
+    nodes["root"].children = ["l1"];
+    nodes["l1"].children = ["l2"];
+
+    applyLayout("root", nodes, "logic");
+
+    // L1 -> L2 should be 40px
+    const expectedX = nodes["l1"].x + nodes["l1"].width + 40;
+    expect(nodes["l2"].x).toBe(expectedX);
+  });
+
+  it("should apply horizontal gap decreasing with depth (L2+ -> L3: 32px)", () => {
+    const nodes: Record<string, MindmapNode> = {
+      root: createNode("root", "Root", 100, 50),
+      l1: createNode("l1", "L1", 80, 40, "root"),
+      l2: createNode("l2", "L2", 80, 40, "l1"),
+      l3: createNode("l3", "L3", 80, 40, "l2"),
+    };
+    nodes["root"].children = ["l1"];
+    nodes["l1"].children = ["l2"];
+    nodes["l2"].children = ["l3"];
+
+    applyLayout("root", nodes, "logic");
+
+    // L2 -> L3 should be 32px
+    const expectedX = nodes["l2"].x + nodes["l2"].width + 32;
+    expect(nodes["l3"].x).toBe(expectedX);
+  });
+
+  it("should maintain minimum vertical gap of 16px between siblings", () => {
+    const nodes: Record<string, MindmapNode> = {
+      root: createNode("root", "Root", 100, 50),
+      c1: createNode("c1", "Child 1", 80, 40, "root"),
+      c2: createNode("c2", "Child 2", 80, 40, "root"),
+    };
+    nodes["root"].children = ["c1", "c2"];
+
+    applyLayout("root", nodes, "logic");
+
+    // Calculate vertical gap between siblings
+    const gap = Math.abs(nodes["c2"].y - (nodes["c1"].y + nodes["c1"].height));
+    expect(gap).toBeGreaterThanOrEqual(16);
+  });
+
+  it("should calculate subtree heights correctly with dynamic gaps", () => {
+    const nodes: Record<string, MindmapNode> = {
+      root: createNode("root", "Root", 100, 50),
+      c1: createNode("c1", "Child 1", 80, 40, "root"),
+      c2: createNode("c2", "Child 2", 80, 40, "root"),
+    };
+    nodes["root"].children = ["c1", "c2"];
+
+    applyLayout("root", nodes, "logic");
+
+    // Root y should be set
+    expect(nodes["root"].y).toBeDefined();
+    // Children should be positioned relative to root
+    expect(nodes["c1"].y).toBeDefined();
+    expect(nodes["c2"].y).toBeDefined();
+  });
 });

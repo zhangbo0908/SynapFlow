@@ -63,9 +63,16 @@ const PropertiesPanel: React.FC = () => {
     }
   };
 
-  const getDefaultBorderColor = () => {
-    if (!node) return "#000000";
-    const theme = THEME_PRESETS[currentTheme] || THEME_PRESETS.business; // Fallback to business as default
+  const getThemeDefaults = () => {
+    if (!node) {
+      return {
+        backgroundColor: "#ffffff",
+        color: "#1A1A1A",
+        borderColor: "#000000",
+        fontSize: 14,
+      };
+    }
+    const theme = THEME_PRESETS[currentTheme] || THEME_PRESETS.business;
     let style = theme.secondaryStyle;
 
     if (node.isRoot) {
@@ -74,10 +81,13 @@ const PropertiesPanel: React.FC = () => {
       style = theme.primaryStyle;
     }
 
-    return style.borderColor || "#000000";
+    return {
+      backgroundColor: style.backgroundColor || "#ffffff",
+      color: style.color || "#1A1A1A",
+      borderColor: style.borderColor || "#000000",
+      fontSize: style.fontSize || 14,
+    };
   };
-
-  const defaultBorderColor = getDefaultBorderColor();
 
   return (
     <div className="w-64 bg-panel border-l border-ui-border flex flex-col h-full shadow-lg z-10 transition-colors duration-200">
@@ -183,87 +193,102 @@ const PropertiesPanel: React.FC = () => {
         {activeTab === "style" &&
           (node ? (
             <div className="p-4 space-y-6">
-              {/* Background Color */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-ui-secondary uppercase tracking-wide">
-                  背景颜色
-                </label>
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="color"
-                    aria-label="背景颜色"
-                    value={node.style?.backgroundColor || "#ffffff"}
-                    onChange={(e) =>
-                      handleStyleChange("backgroundColor", e.target.value)
-                    }
-                    className="w-10 h-10 rounded border border-ui-border cursor-pointer p-1 bg-panel"
-                  />
-                  <span className="text-xs text-ui-secondary font-mono bg-panel-hover px-2 py-1 rounded border border-ui-border">
-                    {node.style?.backgroundColor || "#ffffff"}
-                  </span>
-                </div>
-              </div>
+              {(() => {
+                const themeDefaults = getThemeDefaults();
+                return (
+                  <>
+                    {/* Background Color */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-ui-secondary uppercase tracking-wide">
+                        背景颜色
+                      </label>
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="color"
+                          aria-label="背景颜色"
+                          value={
+                            node.style?.backgroundColor ||
+                            themeDefaults.backgroundColor
+                          }
+                          onChange={(e) =>
+                            handleStyleChange("backgroundColor", e.target.value)
+                          }
+                          className="w-10 h-10 rounded border border-ui-border cursor-pointer p-1 bg-panel"
+                        />
+                        <span className="text-xs text-ui-secondary font-mono bg-panel-hover px-2 py-1 rounded border border-ui-border">
+                          {node.style?.backgroundColor ||
+                            themeDefaults.backgroundColor}
+                        </span>
+                      </div>
+                    </div>
 
-              {/* Text Color */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-ui-secondary uppercase tracking-wide">
-                  文本颜色
-                </label>
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="color"
-                    aria-label="文本颜色"
-                    value={node.style?.color || "#1A1A1A"}
-                    onChange={(e) => handleStyleChange("color", e.target.value)}
-                    className="w-10 h-10 rounded border border-ui-border cursor-pointer p-1 bg-panel"
-                  />
-                  <span className="text-xs text-ui-secondary font-mono bg-panel-hover px-2 py-1 rounded border border-ui-border">
-                    {node.style?.color || "#1A1A1A"}
-                  </span>
-                </div>
-              </div>
+                    {/* Text Color */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-ui-secondary uppercase tracking-wide">
+                        文本颜色
+                      </label>
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="color"
+                          aria-label="文本颜色"
+                          value={node.style?.color || themeDefaults.color}
+                          onChange={(e) =>
+                            handleStyleChange("color", e.target.value)
+                          }
+                          className="w-10 h-10 rounded border border-ui-border cursor-pointer p-1 bg-panel"
+                        />
+                        <span className="text-xs text-ui-secondary font-mono bg-panel-hover px-2 py-1 rounded border border-ui-border">
+                          {node.style?.color || themeDefaults.color}
+                        </span>
+                      </div>
+                    </div>
 
-              {/* Border Color */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-ui-secondary uppercase tracking-wide">
-                  边框颜色
-                </label>
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="color"
-                    aria-label="边框颜色"
-                    value={node.style?.borderColor || defaultBorderColor}
-                    onChange={(e) =>
-                      handleStyleChange("borderColor", e.target.value)
-                    }
-                    className="w-10 h-10 rounded border border-ui-border cursor-pointer p-1 bg-panel"
-                  />
-                  <span className="text-xs text-ui-secondary font-mono bg-panel-hover px-2 py-1 rounded border border-ui-border">
-                    {node.style?.borderColor || defaultBorderColor}
-                  </span>
-                </div>
-              </div>
+                    {/* Border Color */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-ui-secondary uppercase tracking-wide">
+                        边框颜色
+                      </label>
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="color"
+                          aria-label="边框颜色"
+                          value={
+                            node.style?.borderColor || themeDefaults.borderColor
+                          }
+                          onChange={(e) =>
+                            handleStyleChange("borderColor", e.target.value)
+                          }
+                          className="w-10 h-10 rounded border border-ui-border cursor-pointer p-1 bg-panel"
+                        />
+                        <span className="text-xs text-ui-secondary font-mono bg-panel-hover px-2 py-1 rounded border border-ui-border">
+                          {node.style?.borderColor || themeDefaults.borderColor}
+                        </span>
+                      </div>
+                    </div>
 
-              {/* Font Size */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-ui-secondary uppercase tracking-wide">
-                  字体大小 (px)
-                </label>
-                <input
-                  type="number"
-                  aria-label="字体大小"
-                  value={node.style?.fontSize || 14}
-                  onChange={(e) =>
-                    handleStyleChange(
-                      "fontSize",
-                      parseInt(e.target.value) || 14,
-                    )
-                  }
-                  className="w-full px-3 py-2 text-sm bg-panel text-ui-primary border border-ui-border rounded focus:ring-2 focus:ring-brand focus:outline-none"
-                  min="8"
-                  max="72"
-                />
-              </div>
+                    {/* Font Size */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-ui-secondary uppercase tracking-wide">
+                        字体大小 (px)
+                      </label>
+                      <input
+                        type="number"
+                        aria-label="字体大小"
+                        value={node.style?.fontSize || themeDefaults.fontSize}
+                        onChange={(e) =>
+                          handleStyleChange(
+                            "fontSize",
+                            parseInt(e.target.value) || 14,
+                          )
+                        }
+                        className="w-full px-3 py-2 text-sm bg-panel text-ui-primary border border-ui-border rounded focus:ring-2 focus:ring-brand focus:outline-none"
+                        min="8"
+                        max="72"
+                      />
+                    </div>
+                  </>
+                );
+              })()}
 
               {/* Shape */}
               <div className="space-y-2">
