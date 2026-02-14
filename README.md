@@ -64,7 +64,7 @@ SynapFlow 是一个 **人机协同开发** 的实战范式项目。我们采用�
 您可以在 [GitHub Releases](https://github.com/zhangbo0908/SynapFlow/releases) 页面下载最新版本的 macOS 和 Windows 制品。
 
 - **macOS (Apple Silicon)**: [SynapFlow-1.4.0-arm64-mac.zip](https://github.com/zhangbo0908/SynapFlow/releases/download/v1.4.0/SynapFlow-1.4.0-arm64-mac.zip)
-- **Windows (x64)**: [SynapFlow-1.3.0-win-x64.exe](https://github.com/zhangbo0908/SynapFlow/releases/download/v1.3.0/SynapFlow-1.3.0-win-x64.exe)
+- **Windows (x64)**: [SynapFlow-Setup-1.4.0.exe](https://github.com/zhangbo0908/SynapFlow/releases/download/v1.4.0/SynapFlow-Setup-1.4.0.exe)
 
 > **注意**：Windows 版本目前仅完成了打包编译，尚未经过深度测试。建议感兴趣的爱好者可以自行下载或通过源码编译调试。
 
