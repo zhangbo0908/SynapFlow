@@ -63,7 +63,7 @@ SynapFlow 是一个 **人机协同开发** 的实战范式项目。我们采用�
 
 您可以在 [GitHub Releases](https://github.com/zhangbo0908/SynapFlow/releases) 页面下载最新版本的 macOS 和 Windows 制品。
 
-- **macOS (Apple Silicon)**: [SynapFlow-1.3.0-mac-arm64.zip](https://github.com/zhangbo0908/SynapFlow/releases/download/v1.3.0/SynapFlow-1.3.0-mac-arm64.zip)
+- **macOS (Apple Silicon)**: [SynapFlow-1.4.0-arm64-mac.zip](https://github.com/zhangbo0908/SynapFlow/releases/download/v1.4.0/SynapFlow-1.4.0-arm64-mac.zip)
 - **Windows (x64)**: [SynapFlow-1.3.0-win-x64.exe](https://github.com/zhangbo0908/SynapFlow/releases/download/v1.3.0/SynapFlow-1.3.0-win-x64.exe)
 
 > **注意**：Windows 版本目前仅完成了打包编译，尚未经过深度测试。建议感兴趣的爱好者可以自行下载或通过源码编译调试。
@@ -102,6 +102,27 @@ sudo xattr -rd com.apple.quarantine /Applications/SynapFlow.app
 ## 🗓 开发进度
 
 **当前版本**：v1.4.0（Experience & Stability Update）
+
+### 🚀 v1.4.0 更新说明
+
+**发布日期**：2026-02-14
+
+**核心更新**：
+
+1. **体验增强**：
+   - ✅ **全局搜索**：实时节点搜索，支持 Enter 键导航结果
+   - ✅ **全键盘导航**：方向键在节点间自由切换，Tab 创建子节点
+   - ✅ **动态布局优化**：智能间距递减，同级节点动态避让
+
+2. **稳定性提升**：
+   - ✅ **自动更新机制**：GitHub Releases 自动检测下载，友好更新界面
+   - ✅ **TDD 深度对齐**：155 项测试 100% 通过，确保逻辑稳健
+
+3. **技术改进**：
+   - ✅ **构建流程优化**：修复构建失败问题，确保功能完整打包
+   - ✅ **类型安全增强**：逐步修复 TypeScript 类型错误
+
+### 开发历程
 
 - [x] **基础架构**：Electron + React + TypeScript 环境搭建
 - [x] **核心编辑**：节点增删改、快捷键系统、Undo/Redo (20步)
