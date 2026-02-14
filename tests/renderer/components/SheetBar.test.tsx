@@ -78,7 +78,7 @@ describe("SheetBar", () => {
   it("adds a new sheet", () => {
     render(<SheetBar />);
 
-    fireEvent.click(screen.getByTitle("New Sheet"));
+    fireEvent.click(screen.getByTitle("新建工作表"));
 
     const state = useMindmapStore.getState().data;
     expect(state.sheets.length).toBe(3);

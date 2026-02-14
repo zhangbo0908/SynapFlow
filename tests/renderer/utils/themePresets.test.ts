@@ -59,7 +59,7 @@ describe("getThemeConfig", () => {
   it("should return light theme by default", () => {
     const config = getThemeConfig("business");
     expect(config.name).toBe("商务专业");
-    expect(config.backgroundColor).toBe("#F5F7FA");
+    expect(config.backgroundColor).toBe("#F0FDFA");
   });
 
   it("should return dark theme when mode is dark", () => {

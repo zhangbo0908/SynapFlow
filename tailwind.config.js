@@ -8,7 +8,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        canvas: "var(--color-bg-canvas)",
+        app: "var(--color-bg-app)",
         panel: {
           DEFAULT: "var(--color-bg-panel)",
           hover: "var(--color-bg-panel-hover)",
@@ -16,12 +16,15 @@ module.exports = {
         ui: {
           primary: "var(--color-text-primary)",
           secondary: "var(--color-text-secondary)",
-          border: "var(--color-border)",
+          border: "var(--color-border-base)",
         },
-        brand: {
-          DEFAULT: "var(--color-primary)",
-        },
+        brand: "var(--color-brand)",
+        accent: "var(--color-accent)",
       },
+      boxShadow: {
+        'node': 'var(--shadow-node)',
+        'node-selected': 'var(--shadow-node-selected)',
+      }
     },
   },
   plugins: [],

@@ -100,8 +100,7 @@ const CanvasWorkspace: React.FC = () => {
         zoom,
         offset: {
           x: clientWidth / 2 - (rootNode.width * zoom) / 2 - rootNode.x * zoom,
-          y:
-            clientHeight / 2 - (rootNode.height * zoom) / 2 - rootNode.y * zoom,
+          y: clientHeight / 2 - (rootNode.height * zoom) / 2 - rootNode.y * zoom,
         },
       });
     }
@@ -178,13 +177,26 @@ const CanvasWorkspace: React.FC = () => {
 
   const handleWheel = (e: React.WheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
-      // Zoom
-      const zoomFactor = 0.1;
-      const delta = e.deltaY < 0 ? zoomFactor : -zoomFactor;
-      const newZoom = Math.max(0.1, Math.min(5, zoom + delta));
-      updateEditorState({ zoom: newZoom });
+      // Zoom logic remains the same
+      const zoomSpeed = 0.001;
+      const delta = -e.deltaY * zoomSpeed;
+      const newZoom = Math.min(Math.max(zoom + delta, 0.1), 5);
+
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (rect) {
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        const newOffsetX = mouseX - (mouseX - offset.x) * (newZoom / zoom);
+        const newOffsetY = mouseY - (mouseY - offset.y) * (newZoom / zoom);
+
+        updateEditorState({
+          zoom: newZoom,
+          offset: { x: newOffsetX, y: newOffsetY },
+        });
+      }
     } else {
-      // Pan with wheel (touchpad)
+      // Regular scroll -> Pan
       updateEditorState({
         offset: {
           x: offset.x - e.deltaX,
@@ -216,10 +228,14 @@ const CanvasWorkspace: React.FC = () => {
   );
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Check if target is SVG (background) to allow panning
-    // For now simple implementation
-    const tagName = (e.target as Element).tagName.toLowerCase();
-    if (tagName === "svg") {
+    // Check if target is background to allow panning
+    // Use closest to check if we are clicking on a node or link
+    const target = e.target as Element;
+    const isInsideNode = target.closest(".node-group");
+    const isInsideLink = target.closest(".mindmap-link");
+
+    // Only panning if clicking on background (not a node or link)
+    if (!isInsideNode && !isInsideLink) {
       setIsPanning(true);
       setLastMousePos({ x: e.clientX, y: e.clientY });
     }
@@ -239,7 +255,12 @@ const CanvasWorkspace: React.FC = () => {
 
       setLastMousePos({ x: e.clientX, y: e.clientY });
     } else if (dragState.isDraggingNode) {
-      // Dragging Node Logic
+      // Dragging Node Logic (UI Ghost)
+      setDragState((prev) => ({
+        ...prev,
+        ghostPos: { x: e.clientX, y: e.clientY },
+      }));
+
       const rect = containerRef.current?.getBoundingClientRect();
       if (rect) {
         const mouseX = e.clientX - rect.left;
@@ -249,7 +270,7 @@ const CanvasWorkspace: React.FC = () => {
 
         let targetId: string | null = null;
 
-        // Simple hit testing
+        // Hit testing for drop target
         for (const nId in activeSheet.nodes) {
           if (nId === dragState.dragNodeId) continue;
           const n = activeSheet.nodes[nId];
@@ -281,7 +302,6 @@ const CanvasWorkspace: React.FC = () => {
 
         setDragState((prev) => ({
           ...prev,
-          ghostPos: { x: e.clientX, y: e.clientY },
           dropTargetId: targetId,
         }));
       }
@@ -309,15 +329,19 @@ const CanvasWorkspace: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      className="w-full h-full bg-canvas overflow-hidden relative transition-colors duration-200"
+      className="absolute inset-0 overflow-hidden bg-app select-none outline-none"
+      onWheel={handleWheel}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+      tabIndex={0}
     >
       <svg
-        className="w-full h-full cursor-grab active:cursor-grabbing"
-        onWheel={handleWheel}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        width="100%"
+        height="100%"
+        className="block touch-none"
+        style={{ cursor: isPanning ? "grabbing" : "grab" }}
       >
         <g
           id="mindmap-content"

@@ -217,15 +217,15 @@ function App(): JSX.Element {
       ) : (
         <>
           <div
-            className={`h-10 bg-panel border-b border-ui-border flex items-center px-4 space-x-2 draggable-region z-20 relative transition-colors duration-200 ${isMac ? "pl-20" : ""}`}
+            className={`h-10 bg-panel border-b border-ui-border flex items-center px-4 space-x-2 draggable-region z-40 fixed top-0 left-0 right-0 transition-colors duration-200 ${isMac ? "pl-20" : ""}`}
           >
-            <div className="flex-1 font-medium text-sm text-ui-secondary flex items-center space-x-2">
+            <div className="flex-1 font-medium text-sm text-ui-secondary flex items-center space-x-2 pointer-events-none">
               <img src={logo} alt="Logo" className="w-6 h-6" />
               <span>SynapFlow</span>
               <span className="mx-2 text-ui-border">|</span>
               <SaveStatus isSaving={isSaving} lastSavedTime={lastSavedTime} />
             </div>
-            <div className="no-drag flex space-x-2">
+            <div className="no-drag flex space-x-2 pointer-events-auto">
               <button
                 onClick={() => setThemeMode(isDark ? "light" : "dark")}
                 className="px-3 py-1 text-xs bg-panel hover:bg-panel-hover border border-ui-border rounded text-ui-secondary transition-colors"
@@ -277,7 +277,7 @@ function App(): JSX.Element {
               </button>
             </div>
           </div>
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex overflow-hidden relative pt-10">
             <div className="flex-1 bg-canvas relative flex flex-col overflow-hidden transition-colors duration-200">
               <div className="flex-1 relative">
                 <CanvasWorkspace />
@@ -285,7 +285,7 @@ function App(): JSX.Element {
               <SheetBar />
             </div>
             <div
-              className={`transition-all duration-300 ease-in-out overflow-hidden flex flex-col ${isSidebarOpen ? "w-64 opacity-100" : "w-0 opacity-0"}`}
+              className={`transition-all duration-300 ease-in-out overflow-hidden flex flex-col z-30 bg-panel border-l border-ui-border ${isSidebarOpen ? "w-64 opacity-100" : "w-0 opacity-0"}`}
             >
               <div className="w-64 h-full flex flex-col">
                 <PropertiesPanel />

@@ -244,6 +244,7 @@ const NodeComponent: React.FC<NodeComponentProps> = React.memo(
         onDoubleClick={handleDoubleClick}
         onMouseDown={handleMouseDown}
         className={clsx(
+          "node-group",
           !node.isRoot && "cursor-grab active:cursor-grabbing",
           node.isRoot && "cursor-default",
           "transition-transform duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1.0)]",

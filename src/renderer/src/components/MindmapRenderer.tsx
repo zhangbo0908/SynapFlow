@@ -211,11 +211,9 @@ const MindmapRenderer: React.FC<MindmapRendererProps> = ({
             <React.Fragment key={`${node.id}-${child.id}`}>
               <path
                 d={d}
-                className={
-                  !finalColor
-                    ? "stroke-gray-300 dark:stroke-zinc-600 transition-colors"
-                    : undefined
-                }
+                className={`mindmap-link transition-colors ${
+                  !finalColor ? "stroke-gray-300 dark:stroke-zinc-600" : ""
+                }`}
                 style={
                   finalColor
                     ? { stroke: finalColor }

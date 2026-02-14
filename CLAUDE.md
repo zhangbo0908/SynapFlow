@@ -16,6 +16,7 @@ SynapFlow 是一个基于 Electron + React 的**本地优先思维导图工具**
 ```bash
 npm run dev          # 启动开发环境
 npm run build        # 构建项目 (包含类型检查)
+npm run start        # 预览构建结果 (electron-vite preview)
 ```
 
 ### 测试
@@ -37,6 +38,7 @@ npm run build:win    # Windows 打包
 npm run build:mac    # macOS 打包
 npm run build:linux  # Linux 打包
 npm run build:unpack # 解包调试
+npm run generate:icons # 生成应用图标 (需先准备 resources/icon.png)
 ```
 
 ---
@@ -108,10 +110,12 @@ src/
 - `file:savePdf` - 导出 PDF
 - `file:importXMind` - 导入 XMind
 
+### 应用信息
+- `app:getRecentFiles` - 获取最近文件列表 (最多10个)
+
 ### 用户偏好
 - `user:getPreferences` - 获取用户偏好
 - `user:updatePreferences` - 更新用户偏好
-- `app:getRecentFiles` - 获取最近文件列表 (最多10个)
 
 ### 使用方式
 在渲染进程中通过 `window.api.xxx()` 调用。
@@ -131,7 +135,7 @@ src/
 SVG 渲染引擎：
 - 视口裁剪优化 (Viewport Culling)
 - 递归渲染节点
-- 连接线生成 (支持 bezier/straight/step)
+- 连接线生成 (支持 bezier/straight/step/hand-drawn)
 - 主题样式应用
 
 ### [NodeComponent.tsx](src/renderer/src/components/NodeComponent.tsx)
@@ -159,9 +163,14 @@ interface NodeStyle {
   backgroundColor?: string;
   color?: string;
   borderColor?: string;
+  borderWidth?: number;
+  borderStyle?: "solid" | "dashed" | "dotted" | "none";
+  borderRadius?: number;
+  shadowColor?: string;
+  shadowBlur?: number;
+  fontSize?: number;
   shape?: "rectangle" | "rounded" | "ellipse" | "diamond" | "capsule" | "hexagon" | "cloud" | "underline";
-  lineStyle?: "straight" | "bezier" | "step";
-  // ...
+  lineStyle?: "straight" | "bezier" | "step" | "hand-drawn";
 }
 
 // 思维导图节点
@@ -223,11 +232,11 @@ UI Action → Store Action → Immer Update → State Update → UI Re-render
 
 **6 种预设主题** (每种都有 light/dark 版本):
 - 商务专业 (business)
-- 清新薄荷 (mint)
+- 清新薄荷 (fresh)
 - 极简黑白 (minimal)
 - 活力橙光 (vibrant)
-- 赛博科技 (cyber)
-- 手绘草图 (hand-drawn)
+- 赛博科技 (dark)
+- 手绘草图 (handDrawn)
 
 **节点层级样式**:
 - `rootStyle` - 根节点
@@ -296,3 +305,27 @@ sudo xattr -rd com.apple.quarantine /Applications/SynapFlow.app
 
 ### 节点不显示
 检查 `setMindmap` 后是否触发了 `applyLayout`，数据加载与布局计算需要原子性执行。
+
+---
+
+## 已知问题
+
+### `app:getRecentFiles` API 未完全暴露
+`src/shared/types.ts` 中定义了 `app.getRecentFiles` 接口，但 `src/preload/index.ts` 中未实际暴露该 API。如需使用，需在 preload 中添加:
+```typescript
+app: {
+  getRecentFiles: () => ipcRenderer.invoke("app:getRecentFiles"),
+}
+```
+
+---
+
+## 已安装技能 (Installed Skills)
+
+### UI/UX Pro Max
+- **定义文件**: [.trae/skills/ui-ux-pro-max/SKILL.md](.trae/skills/ui-ux-pro-max/SKILL.md)
+- **功能**: 提供专业级 UI/UX 设计建议、配色方案、字体搭配及设计系统生成。
+- **使用方式**: 
+  - 查阅 `SKILL.md` 获取设计准则。
+  - 运行 `python3 .trae/skills/ui-ux-pro-max/scripts/search.py` 进行设计系统生成。
+

@@ -203,8 +203,8 @@ describe("PropertiesPanel", () => {
 
     render(<PropertiesPanel />);
 
-    // The business theme primaryStyle borderColor is #34495E
+    // The business theme primaryStyle borderColor is #CCF2ED
     const colorInput = screen.getByLabelText("边框颜色") as HTMLInputElement;
-    expect(colorInput.value.toUpperCase()).toBe("#34495E");
+    expect(colorInput.value.toUpperCase()).toBe("#CCF2ED");
   });
 });

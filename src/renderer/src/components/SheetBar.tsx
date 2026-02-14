@@ -98,8 +98,8 @@ const SheetBar: React.FC = () => {
   if (!sheets) return null;
 
   return (
-    <div className="h-8 bg-canvas border-t border-ui-border flex items-center px-2 select-none justify-between shrink-0 relative transition-colors duration-200">
-      <div className="flex items-center space-x-1 overflow-x-auto no-scrollbar flex-1 mr-4">
+    <div className="flex items-center h-10 px-2 border-t bg-panel border-ui-border select-none shrink-0 relative transition-colors duration-200 justify-between">
+      <div className="flex items-center flex-1 space-x-1 overflow-x-auto no-scrollbar mr-4">
         {sheets.map((sheet, index) => (
           <div
             key={sheet.id}
@@ -107,15 +107,15 @@ const SheetBar: React.FC = () => {
             onDragStart={(e) => handleDragStart(e, index)}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, index)}
-            className={clsx(
-              "group relative flex items-center px-3 py-1 rounded-t text-xs cursor-pointer border-b-2 transition-colors min-w-[80px] justify-center",
-              sheet.id === activeSheetId
-                ? "bg-panel border-brand text-brand font-medium shadow-sm"
-                : "bg-panel-hover border-transparent text-ui-secondary hover:bg-panel",
-            )}
             onClick={() => setActiveSheet(sheet.id)}
             onDoubleClick={() => handleStartEdit(sheet.id, sheet.title)}
             onContextMenu={(e) => handleContextMenu(e, sheet.id)}
+            className={clsx(
+              "group relative flex items-center px-4 py-1 space-x-2 text-sm transition-all duration-200 cursor-pointer rounded-t-md border-b-2 min-w-[80px] justify-center",
+              sheet.id === activeSheetId
+                ? "bg-app text-brand border-brand font-medium shadow-sm"
+                : "text-ui-secondary border-transparent hover:bg-panel-hover hover:text-ui-primary"
+            )}
           >
             {editingId === sheet.id ? (
               <input
@@ -128,15 +128,14 @@ const SheetBar: React.FC = () => {
                 onClick={(e) => e.stopPropagation()}
               />
             ) : (
-              <span>{sheet.title}</span>
+              <span className="truncate max-w-[120px]">{sheet.title}</span>
             )}
           </div>
         ))}
-
         <button
           onClick={addSheet}
-          className="p-1 hover:bg-panel-hover rounded text-ui-secondary hover:text-ui-primary w-6 h-6 flex items-center justify-center transition-colors"
-          title="New Sheet"
+          className="p-1.5 transition-colors rounded-md text-ui-secondary hover:bg-panel-hover hover:text-brand flex items-center justify-center"
+          title="新建工作表"
         >
           +
         </button>
